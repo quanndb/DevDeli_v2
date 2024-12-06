@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  #Database
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=Quandz@@2083
+    networks:
+      - quanndb_network
+
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/usr/local/etc/redis
+    restart: always
+    networks:
+      - quanndb_network
+
+  #Services
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command: >
+      start-dev
+      --http-relative-path /auth
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: root
+      KC_DB_PASSWORD: Quandz@@2083
+    ports:
+      - "8081:8080"
+    restart: always
+    networks:
+      - quanndb_network
+
+  identity-service:
+    image: devdeli/identity-service:latest
+    build:
+      context: ./IdentityService
+    restart: always
+    ports:
+      - 2818:8080
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userDB
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Quandz@@2083
+    depends_on:
+      - postgres
+    networks:
+      - quanndb_network
+  
+  storage-service:
+    image: devdeli/storage-service:latest
+    build:
+      context: ./StorageService
+    restart: always
+    ports:
+      - 2819:8080
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/storageDB
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Quandz@@2083
+    depends_on:
+      - postgres
+    networks:
+      - quanndb_network
+
+networks:
+  quanndb_network:
+    driver: bridge
