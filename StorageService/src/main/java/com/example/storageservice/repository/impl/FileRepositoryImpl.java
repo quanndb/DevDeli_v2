@@ -13,6 +13,10 @@ import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +59,40 @@ public class FileRepositoryImpl implements CustomFileRepository {
                     .append(" like :keyword ")
                     .append(" )");
             values.put("keyword", StrUtils.encodeKeyword(request.getQuery()));
+        }
+
+        if(request.getName() != null && !request.getName().trim().isEmpty()){
+            sql.append(" and (")
+                    .append(" lower(a.name)")
+                    .append(" like :name ")
+                    .append(" )");
+            values.put("name", request.getName().toLowerCase());
+        }
+
+        if(request.getType() != null && !request.getType().trim().isEmpty()){
+            sql.append(" and (")
+                    .append(" lower(a.type)")
+                    .append(" like :type ")
+                    .append(" )");
+            values.put("type", request.getType().toLowerCase());
+        }
+
+        if(request.getOwnerId() != null && !request.getOwnerId().trim().isEmpty()){
+            sql.append(" and (")
+                    .append(" lower(a.ownerId)")
+                    .append(" like :ownerId ")
+                    .append(" )");
+            values.put("ownerId", request.getOwnerId().toLowerCase());
+        }
+
+        if (request.getCreatedDate() != null) {
+            LocalDate requestDate = request.getCreatedDate();
+            LocalDateTime startOfDay = requestDate.atStartOfDay();
+            LocalDateTime endOfDay = requestDate.atTime(LocalTime.MAX);
+
+            sql.append(" and (a.createdDate between :startDate and :endDate)");
+            values.put("startDate", startOfDay);
+            values.put("endDate", endOfDay);
         }
 
         return sql.toString();

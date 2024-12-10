@@ -35,4 +35,6 @@ public class File extends Auditable {
     private boolean sharing;
     @Column(name = "deleted", nullable = false)
     private boolean deleted;
+    @Column(nullable = false)
+    private long size;
 }

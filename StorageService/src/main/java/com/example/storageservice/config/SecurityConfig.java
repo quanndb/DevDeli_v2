@@ -13,7 +13,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     String[] PUBLIC_ENDPOINTS = {
-            "files/sharing/**",
+            "public/files/*/download",
+            "public/files/*/info",
             "swagger-ui/**",
             "api-docs/**",
             "v3/api-docs/**",

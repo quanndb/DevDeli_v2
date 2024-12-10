@@ -3,6 +3,8 @@ package com.example.storageservice.DTO.request;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 public class FilePageRequest extends PageRequest{
@@ -11,5 +13,6 @@ public class FilePageRequest extends PageRequest{
     private String name;
     private String path;
     private String type;
-    private boolean sharing;
+    private Boolean sharing;
+    private LocalDate createdDate;
 }

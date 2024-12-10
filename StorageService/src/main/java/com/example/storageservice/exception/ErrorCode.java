@@ -18,7 +18,7 @@ public enum ErrorCode {
     UNKNOWN_REQUEST(404, "Unknown request has been requested", HttpStatus.BAD_REQUEST),
     INVALID_PATH(405, "Invalid path sequence in file name", HttpStatus.BAD_REQUEST),
     FILE_NOT_FOUND(406, "File not found", HttpStatus.BAD_REQUEST),
-
+    UN_SUPPORT_FILE(407, "File type or size is not support", HttpStatus.BAD_REQUEST),
     ;
 
 
