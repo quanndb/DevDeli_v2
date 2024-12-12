@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @Builder
@@ -22,6 +24,10 @@ public class RegisterRequest {
     private String password;
     @NotBlank(message = "FIELD_NOT_BLANK")
     private String fullname;
+    @NotBlank(message = "FIELD_NOT_BLANK")
+    private LocalDate dob;
+    @NotBlank(message = "FIELD_NOT_BLANK")
+    private int yoe;
     private Gender gender;
     private String address;
     private String ip;

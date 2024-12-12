@@ -30,11 +30,11 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     private final RoleRepository roleRepository;
 
     @Override
-    public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-        if(targetDomainObject instanceof String resourceCode) {
-            Permission foundResource = permissionRepository.findByCodeIgnoreCase(resourceCode)
+    public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permissionScope) {
+        if(permissionScope instanceof String permissionAndScope) {
+            Permission foundResource = permissionRepository.findByCodeIgnoreCase(permissionAndScope.split("\\.")[0])
                     .orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
-            return checkUserPermission(authentication.getName(), foundResource.getCode(), permission);
+            return checkUserPermission(authentication.getName(), foundResource.getCode(), permissionAndScope.split("\\.")[1]);
         }
         return false;
     }

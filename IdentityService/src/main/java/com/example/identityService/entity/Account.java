@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Getter
 @Setter
@@ -30,6 +32,10 @@ public class Account extends Auditable{
     private String password;
     @Column(nullable = false)
     private String fullname;
+    @Column(nullable = false)
+    private LocalDate dob;
+    @Column(nullable = false)
+    private int yoe;
     @Column(nullable = false)
     private boolean verified;
     @Column(nullable = false)

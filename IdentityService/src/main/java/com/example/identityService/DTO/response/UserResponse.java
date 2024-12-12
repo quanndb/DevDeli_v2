@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,9 +22,12 @@ public class UserResponse {
     private String id;
     private String email;
     private String fullname;
+    private LocalDate dob;
+    private int yoe;
     private String address;
     private Gender gender;
     private String cloudImageUrl;
+    private String cloudImageId;
     private LocalDateTime createdDate;
     private String createdBy;
     private boolean verified;

@@ -39,6 +39,7 @@ public enum ErrorCode {
     PERMISSION_NOT_EMPTY(421, "User permission is not empty", HttpStatus.BAD_REQUEST),
     ROLE_EXISTED(422, "This role is existed", HttpStatus.BAD_REQUEST),
     PERMISSION_EXISTED(423, "This permission is existed", HttpStatus.BAD_REQUEST),
+    INVALID_FILE(424, "Invalid file has been requested", HttpStatus.BAD_REQUEST),
     ;
 
 

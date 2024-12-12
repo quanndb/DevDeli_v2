@@ -12,7 +12,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 
-import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,30 +58,68 @@ public class AccountRepositoryImpl implements CustomAccountRepository {
             values.put("keyword", StrUtils.encodeKeyword(request.getQuery()));
         }
 
-        // Lặp qua tất cả các trường trong UserPageRequest để tạo các điều kiện khác
-        Field[] fields = request.getClass().getDeclaredFields();
-
-        for (Field field : fields) {
-            field.setAccessible(true);
-
-            try {
-                Object value = field.get(request);
-
-                if (value != null && !(value instanceof String && ((String) value).trim().isEmpty())) {
-                    String fieldName = field.getName();
-
-                    if (value instanceof String) {
-                        sql.append(" and lower(a.").append(fieldName).append(") like :").append(fieldName);
-                        values.put(fieldName, "%" + value.toString().toLowerCase() + "%");
-                    } else {
-                        sql.append(" and a.").append(fieldName).append(" = :").append(fieldName);
-                        values.put(fieldName, value);
-                    }
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
+        if(request.getEmail() != null && !request.getEmail().trim().isEmpty()){
+            sql.append(" and (")
+                    .append(" lower(a.email)")
+                    .append(" like :email ")
+                    .append(" )");
+            values.put("email", request.getEmail().toLowerCase());
         }
+
+        if(request.getFullname() != null && !request.getFullname().trim().isEmpty()){
+            sql.append(" and (")
+                    .append(" lower(a.fullname)")
+                    .append(" like :fullname ")
+                    .append(" )");
+            values.put("fullname", request.getFullname().toLowerCase());
+        }
+
+        if(request.getFullname() != null && !request.getFullname().trim().isEmpty()){
+            sql.append(" and (")
+                    .append(" lower(a.fullname)")
+                    .append(" like :fullname ")
+                    .append(" )");
+            values.put("fullname", request.getFullname().toLowerCase());
+        }
+
+        if (request.getDob() != null) {
+            LocalDate requestDate = request.getDob();
+            sql.append(" and a.dob = :dob");
+            values.put("dob", requestDate);
+        }
+
+        if (request.getYoe() != null) {
+            int requestYoe = request.getYoe();
+            sql.append(" and a.yoe = :yoe");
+            values.put("yoe", requestYoe);
+        }
+
+        if (request.getVerified() != null) {
+            boolean requestVerified = request.getVerified();
+            sql.append(" and a.verified = :verified");
+            values.put("verified", requestVerified);
+        }
+
+        if (request.getEnable() != null) {
+            boolean requestEnable = request.getEnable();
+            sql.append(" and a.enable = :enable");
+            values.put("enable", requestEnable);
+        }
+
+        if(request.getAddress() != null && !request.getAddress().trim().isEmpty()){
+            sql.append(" and (")
+                    .append(" lower(a.address)")
+                    .append(" like :address ")
+                    .append(" )");
+            values.put("address", request.getAddress().toLowerCase());
+        }
+
+        if (request.getGender() != null) {
+            String requestGender = request.getGender();
+            sql.append(" and a.gender = :gender");
+            values.put("gender", requestGender);
+        }
+
         return sql.toString();
     }
 

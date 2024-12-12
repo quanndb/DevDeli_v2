@@ -29,7 +29,7 @@ public class PermissionController {
     private final PermissionService permissionService;
 
     @GetMapping
-    @PreAuthorize("hasPermission('ROLES', 'READ')")
+    @PreAuthorize("hasPermission(null, 'roles.read')")
     public ApiResponse<PageResponse<PermissionResponse>> getPermissions(@ModelAttribute PermissionPageRequest request) {
         return ApiResponse.<PageResponse<PermissionResponse>>builder()
                 .code(200)
@@ -38,7 +38,7 @@ public class PermissionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasPermission('ROLES', 'CREATE')")
+    @PreAuthorize("hasPermission(null, 'roles.create')")
     public ApiResponse<String> addPermission(@RequestBody @Valid CreatePermissionRequest request){
         boolean result = permissionService.createPermission(request);
         return ApiResponse.<String>builder()
@@ -48,7 +48,7 @@ public class PermissionController {
     }
 
     @PostMapping("/{permissionId}")
-    @PreAuthorize("hasPermission('ROLES', 'UPDATE')")
+    @PreAuthorize("hasPermission(null, 'roles.update')")
     public ApiResponse<String> updatePermission(@PathVariable String permissionId, @RequestBody @Valid CreatePermissionRequest request){
         boolean result = permissionService.updatePermission(permissionId, request);
         return ApiResponse.<String>builder()
@@ -58,7 +58,7 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{permissionId}")
-    @PreAuthorize("hasPermission('ROLES', 'DELETE')")
+    @PreAuthorize("hasPermission(null, 'roles.delete')")
     public ApiResponse<String> deletePermission(@PathVariable String permissionId){
         boolean result = permissionService.deletePermission(permissionId);
         return ApiResponse.<String>builder()

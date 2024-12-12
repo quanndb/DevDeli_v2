@@ -33,7 +33,7 @@ public class RoleController {
     private final RoleService roleService;
 
     @GetMapping
-    @PreAuthorize("hasPermission('ROLES', 'READ')")
+    @PreAuthorize("hasPermission(null, 'roles.read')")
     public ApiResponse<PageResponse<RoleResponse>> getRoles(@ModelAttribute RolePageRequest request) {
         return ApiResponse.<PageResponse<RoleResponse>>builder()
                 .code(200)
@@ -42,7 +42,7 @@ public class RoleController {
     }
 
     @GetMapping("{roleId}")
-    @PreAuthorize("hasPermission('ROLES', 'READ')")
+    @PreAuthorize("hasPermission(null, 'roles.read')")
     public ApiResponse<List<String>> getAllPermissionOfRole(@PathVariable String roleId){
         return ApiResponse.<List<String>>builder()
                 .code(200)
@@ -51,7 +51,7 @@ public class RoleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasPermission('ROLES', 'CREATE')")
+    @PreAuthorize("hasPermission(null, 'roles.create')")
     public ApiResponse<String> addRole(@RequestBody @Valid CreateRoleRequest request){
         boolean result = roleService.createRole(request);
         return ApiResponse.<String>builder()
@@ -61,7 +61,7 @@ public class RoleController {
     }
 
     @PostMapping("/{roleId}")
-    @PreAuthorize("hasPermission('ROLES', 'UPDATE')")
+    @PreAuthorize("hasPermission(null, 'roles.update')")
     public ApiResponse<String> updateRole(@PathVariable String roleId, @RequestBody @Valid CreateRoleRequest request){
         boolean result = roleService.updateRole(roleId, request);
         return ApiResponse.<String>builder()
@@ -71,7 +71,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{roleId}")
-    @PreAuthorize("hasPermission('ROLES', 'DELETE')")
+    @PreAuthorize("hasPermission(null, 'roles.delete')")
     public ApiResponse<String> deleteRole(@PathVariable String roleId){
         boolean result = roleService.deleteRole(roleId);
         return ApiResponse.<String>builder()
@@ -81,7 +81,7 @@ public class RoleController {
     }
 
     @PostMapping("/{roleId}/permissions")
-    @PreAuthorize("hasPermission('ROLES', 'CREATE')")
+    @PreAuthorize("hasPermission(null, 'roles.create')")
     public ApiResponse<String> assignPermissionsForRole(@PathVariable String roleId,
                                                        @RequestBody List<DetailsAssignPermissionRequest> assignPermissionRequest){
 
@@ -93,7 +93,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{roleId}/permissions")
-    @PreAuthorize("hasPermission('ROLES', 'DELETE')")
+    @PreAuthorize("hasPermission(null, 'roles.delete')")
     public ApiResponse<String> unassignPermissionsForRole(@PathVariable String roleId,
                                                        @RequestBody List<DetailsAssignPermissionRequest> assignPermissionRequest){
 
