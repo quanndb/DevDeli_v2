@@ -7,7 +7,7 @@ import java.util.UUID;
 public interface AuthorityService {
     UserAuthority getUserAuthority(UUID userId);
 
-    UserAuthority getUserAuthority(String username);
+    UserAuthority getUserAuthority(String email);
 
     UserAuthority getClientAuthority(UUID clientId);
 

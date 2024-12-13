@@ -9,6 +9,6 @@ public class FeignClientInterceptor implements RequestInterceptor {
     @Override
     public void apply(RequestTemplate requestTemplate) {
         // @TODO header bearer token
-
+        requestTemplate.header("Authorization", "Bear ");
     }
 }

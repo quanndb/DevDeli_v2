@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -26,6 +27,7 @@ import java.util.Objects;
 @WebFilter("/api/**")
 @Slf4j
 @Order(100)
+@Component
 public class ActionLogFilter extends OncePerRequestFilter {
     private static final int START_LOG_HTTP_STATUS = HttpStatus.BAD_REQUEST.value();
     private static final String LOG_REMOTE_IP = "remote_ip";

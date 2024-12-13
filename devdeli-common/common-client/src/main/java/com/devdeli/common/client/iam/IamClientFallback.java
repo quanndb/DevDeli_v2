@@ -1,10 +1,9 @@
 package com.devdeli.common.client.iam;
 
 import com.devdeli.common.UserAuthority;
-import com.devdeli.common.dto.response.Response;
+import com.devdeli.common.dto.response.ApiResponse;
 import com.devdeli.common.enums.ServiceUnavailableError;
 import com.devdeli.common.exception.ForwardInnerAlertException;
-import com.devdeli.common.exception.ResponseException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -27,21 +26,17 @@ public class IamClientFallback implements FallbackFactory<IamClient> {
         }
 
         @Override
-        public Response<UserAuthority> getUserAuthority(UUID userId) {
+        public ApiResponse<UserAuthority> getUserAuthority(String userId) {
             if (cause instanceof ForwardInnerAlertException) {
-                return Response.fail((RuntimeException) cause);
+                return ApiResponse.<UserAuthority>builder()
+                        .code(ServiceUnavailableError.SERVICE_UNAVAILABLE_ERROR.getCode())
+                        .message(ServiceUnavailableError.SERVICE_UNAVAILABLE_ERROR.getCode().toString())
+                        .build();
             }
-            return Response.fail(
-                    new ResponseException(ServiceUnavailableError.IAM_SERVICE_UNAVAILABLE_ERROR));
-        }
-
-        @Override
-        public Response<UserAuthority> getUserAuthority(String username) {
-            if (cause instanceof ForwardInnerAlertException) {
-                return Response.fail((RuntimeException) cause);
-            }
-            return Response.fail(
-                    new ResponseException(ServiceUnavailableError.IAM_SERVICE_UNAVAILABLE_ERROR));
+            return ApiResponse.<UserAuthority>builder()
+                    .code(ServiceUnavailableError.IAM_SERVICE_UNAVAILABLE_ERROR.getCode())
+                    .message(ServiceUnavailableError.IAM_SERVICE_UNAVAILABLE_ERROR.getMessage())
+                    .build();
         }
     }
 }

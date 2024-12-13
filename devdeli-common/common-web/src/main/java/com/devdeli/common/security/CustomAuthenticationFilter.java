@@ -24,9 +24,10 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-@Component
 @Slf4j
+@Component
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final AuthorityService authorityService;
 
@@ -45,12 +46,19 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         Jwt token = authentication.getToken();
 
         Boolean isRoot = Boolean.FALSE;
-        Boolean isClient = Boolean.FALSE;
 
-        Optional<UserAuthority> optionalUserAuthority = enrichAuthority(token);
+        UserAuthority optionalUserAuthority = enrichAuthority(token);
         //@TODO enrich
 
         Set<SimpleGrantedAuthority> grantedPermissions = new HashSet<>();
+        if(optionalUserAuthority != null){
+            isRoot = optionalUserAuthority.getIsRoot();
+            grantedPermissions = optionalUserAuthority.getGrantedPermissions().stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toSet());
+            grantedPermissions.add(new SimpleGrantedAuthority(isRoot? "root" : "nonRoot"));
+        }
+
         String username;
         if (StringUtils.hasText(token.getClaimAsString("preferred_username"))) {
             username = token.getClaimAsString("preferred_username");
@@ -60,7 +68,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
         User principal = new User(username, "", grantedPermissions);
         AbstractAuthenticationToken auth =
-                new UserAuthentication(principal, token, grantedPermissions, isRoot, isClient);
+                new UserAuthentication(principal, token, grantedPermissions, isRoot, !isRoot);
 
         SecurityContextHolder.getContext().setAuthentication(auth);
         filterChain.doFilter(request, response);
@@ -74,9 +82,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         return !(authentication instanceof JwtAuthenticationToken);
     }
 
-    private Optional<UserAuthority> enrichAuthority(Jwt token) {
+    private UserAuthority enrichAuthority(Jwt token) {
         // Call lấy UserAuthority từ IAM dựa vào AuthorityService lưu ý với service khác IAM thì impl sẽ là RemoteAuthorityServiceImpl,
         // IAM thì sẽ dùng AuthorityServiceImpl(@Primary)
-        return Optional.empty();
+        return authorityService.getUserAuthority(token.getClaimAsString("email"));
     }
 }

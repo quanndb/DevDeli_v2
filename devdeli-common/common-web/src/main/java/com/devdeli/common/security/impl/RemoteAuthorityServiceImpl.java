@@ -21,8 +21,8 @@ public class RemoteAuthorityServiceImpl implements AuthorityService {
     }
 
     @Override
-    public UserAuthority getUserAuthority(String username) {
-        return null;
+    public UserAuthority getUserAuthority(String email) {
+        return iamClient.getUserAuthority(email).getResult();
     }
 
     @Override
