@@ -14,7 +14,7 @@ public class PermissionConfig {
         return new RegexPermissionEvaluator();
     }
     @Bean
-    public MethodSecurityExpressionHandler expressionHandler(PermissionEvaluator permissionEvaluator) {
+    public MethodSecurityExpressionHandler expressionHandler(RegexPermissionEvaluator permissionEvaluator) {
         DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
         expressionHandler.setPermissionEvaluator(permissionEvaluator);
         return expressionHandler;

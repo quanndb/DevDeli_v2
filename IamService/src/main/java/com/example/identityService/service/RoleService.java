@@ -1,20 +1,15 @@
 package com.example.identityService.service;
 
-import com.example.identityService.DTO.EnumRole;
-import com.example.identityService.DTO.EnumSortDirection;
 import com.example.identityService.DTO.request.CreateRoleRequest;
 import com.example.identityService.DTO.request.RolePageRequest;
 import com.example.identityService.DTO.response.PageResponse;
 import com.example.identityService.DTO.response.RoleResponse;
-import com.example.identityService.DTO.response.UserResponse;
-import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.entity.Role;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.mapper.RoleMapper;
 import com.example.identityService.repository.RolePermissionRepository;
 import com.example.identityService.repository.RoleRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -60,12 +55,6 @@ public class RoleService {
         foundRole.setDeleted(true);
         roleRepository.save(foundRole);
         return true;
-    }
-
-    public String getSupperAdminId(){
-        Role foundRole = roleRepository.findByNameIgnoreCase(EnumRole.SUPPER_ADMIN.getName())
-                .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
-        return foundRole.getId();
     }
 
     public PageResponse<RoleResponse> getRoles(RolePageRequest request) {

@@ -1,5 +1,7 @@
 package com.example.identityService.service;
 
+import com.example.identityService.DTO.EnumCell;
+import com.example.identityService.DTO.EnumSheetHeader;
 import com.example.identityService.DTO.Gender;
 import com.example.identityService.DTO.request.CreateAccountRequest;
 import com.example.identityService.DTO.request.UserPageRequest;
@@ -43,7 +45,6 @@ public class AccountService {
     private final AccountMapper accountMapper;
     private final AccountRoleService accountRoleService;
     private final PasswordEncoder passwordEncoder;
-    private final StorageService storageService;
 
     public UserResponse getUserinfo(String accountId){
         Account foundAccount = accountRepository.findById(accountId)
@@ -102,9 +103,12 @@ public class AccountService {
 
             // Create Header Row
             Row header = sheet.createRow(0);
-            String[] headers = {"STT", "Username", "Họ Tên", "Ngày sinh", "Địa chỉ",
-                    "Số năm kinh nghiệm", "Giới tính", "Image url", "Image id",
-                    "Ngày tạo", "Người tạo", "Đã xác thực", "Đang hoạt động", "Vai trò"};
+            String[] headers = {EnumSheetHeader.STT.getHeader(), EnumSheetHeader.USERNAME.getHeader(), EnumSheetHeader.FULL_NAME.getHeader(),
+                    EnumSheetHeader.DATE_OF_BIRTH.getHeader(), EnumSheetHeader.ADDRESS.getHeader(),
+                    EnumSheetHeader.YEARS_OF_EXPERIENCE.getHeader(), EnumSheetHeader.GENDER.getHeader(),
+                    EnumSheetHeader.IMAGE_URL.getHeader(), EnumSheetHeader.IMAGE_ID.getHeader(),
+                    EnumSheetHeader.CREATED_DATE.getHeader(), EnumSheetHeader.CREATED_BY.getHeader(),
+                    EnumSheetHeader.VERIFIED.getHeader(), EnumSheetHeader.ACTIVE.getHeader(), EnumSheetHeader.ROLE.getHeader()};
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
@@ -122,20 +126,20 @@ public class AccountService {
             int rowIdx = 1;
             for (UserResponse user : users) {
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(rowIdx - 1);
-                row.createCell(1).setCellValue(user.getEmail());
-                row.createCell(2).setCellValue(user.getFullname());
-                row.createCell(3).setCellValue(user.getDob().toString());
-                row.createCell(4).setCellValue(user.getAddress());
-                row.createCell(5).setCellValue(user.getYoe());
-                row.createCell(6).setCellValue(user.getGender() == null? null : user.getGender().name());
-                row.createCell(7).setCellValue(user.getCloudImageUrl());
-                row.createCell(8).setCellValue(user.getCloudImageId());
-                row.createCell(9).setCellValue(user.getCreatedDate().toString());
-                row.createCell(10).setCellValue(user.getCreatedBy());
-                row.createCell(11).setCellValue(user.isVerified());
-                row.createCell(12).setCellValue(user.isEnable());
-                row.createCell(13).setCellValue(String.join(", ", accountRoleService.getAllUserRole(user.getId())));
+                row.createCell(EnumCell.CELL0.ordinal()).setCellValue(rowIdx - 1);
+                row.createCell(EnumCell.CELL1.ordinal()).setCellValue(user.getEmail());
+                row.createCell(EnumCell.CELL2.ordinal()).setCellValue(user.getFullname());
+                row.createCell(EnumCell.CELL3.ordinal()).setCellValue(user.getDob().toString());
+                row.createCell(EnumCell.CELL4.ordinal()).setCellValue(user.getAddress());
+                row.createCell(EnumCell.CELL5.ordinal()).setCellValue(user.getYoe());
+                row.createCell(EnumCell.CELL6.ordinal()).setCellValue(user.getGender() == null? null : user.getGender().name());
+                row.createCell(EnumCell.CELL7.ordinal()).setCellValue(user.getCloudImageUrl());
+                row.createCell(EnumCell.CELL8.ordinal()).setCellValue(user.getCloudImageId());
+                row.createCell(EnumCell.CELL9.ordinal()).setCellValue(user.getCreatedDate().toString());
+                row.createCell(EnumCell.CELL10.ordinal()).setCellValue(user.getCreatedBy());
+                row.createCell(EnumCell.CELL11.ordinal()).setCellValue(user.isVerified());
+                row.createCell(EnumCell.CELL12.ordinal()).setCellValue(user.isEnable());
+                row.createCell(EnumCell.CELL13.ordinal()).setCellValue(String.join(", ", accountRoleService.getAllUserRole(user.getId())));
                 for (int i = 0; i < headers.length; i++) {
                     row.getCell(i).setCellStyle(style);
                 }
@@ -149,9 +153,11 @@ public class AccountService {
     }
 
     public List<String> importUsers(MultipartFile file) throws IOException {
-        if (file.isEmpty() || !Objects.requireNonNull(file.getOriginalFilename()).endsWith(".xlsx")) {
+        if (file.isEmpty() ||
+                !Objects.requireNonNull(file.getOriginalFilename()).matches(".*\\.xls(x?)$")) {
             throw new AppExceptions(ErrorCode.INVALID_FILE);
         }
+
         List<String> errors = new ArrayList<>();
         List<CreateAccountRequest> users = new ArrayList<>();
 
@@ -160,17 +166,17 @@ public class AccountService {
             for (int i = 1; i <= sheet.getLastRowNum(); i++) { // Start from row 1 (row 0 is header)
                 Row row = sheet.getRow(i);
                 try {
-                    String email = ExcelHelper.getCellStringValue(row, 1);
-                    String fullName = ExcelHelper.getCellStringValue(row, 2);
-                    LocalDate birthDate = ExcelHelper.getCellDateValue(row, 3);
-                    String address = ExcelHelper.getCellStringValue(row, 4);
-                    int yearsOfExperience = ExcelHelper.getCellNumericValue(row, 5);
-                    String gender = ExcelHelper.getCellStringValue(row, 6);
-                    String cloudImageUrl = ExcelHelper.getCellStringValue(row, 7);
-                    String cloudImageId = ExcelHelper.getCellStringValue(row, 8);
-                    boolean verified = ExcelHelper.getCellBooleanValue(row, 11);
-                    boolean enable = ExcelHelper.getCellBooleanValue(row, 12);
-                    String roles = ExcelHelper.getCellStringValue(row, 13);
+                    String email = ExcelHelper.getCellStringValue(row, EnumCell.CELL1.ordinal());
+                    String fullName = ExcelHelper.getCellStringValue(row, EnumCell.CELL2.ordinal());
+                    LocalDate birthDate = ExcelHelper.getCellDateValue(row, EnumCell.CELL3.ordinal());
+                    String address = ExcelHelper.getCellStringValue(row, EnumCell.CELL4.ordinal());
+                    int yearsOfExperience = ExcelHelper.getCellNumericValue(row, EnumCell.CELL5.ordinal());
+                    String gender = ExcelHelper.getCellStringValue(row, EnumCell.CELL6.ordinal());
+                    String cloudImageUrl = ExcelHelper.getCellStringValue(row, EnumCell.CELL7.ordinal());
+                    String cloudImageId = ExcelHelper.getCellStringValue(row, EnumCell.CELL8.ordinal());
+                    boolean verified = ExcelHelper.getCellBooleanValue(row, EnumCell.CELL11.ordinal());
+                    boolean enable = ExcelHelper.getCellBooleanValue(row, EnumCell.CELL12.ordinal());
+                    String roles = ExcelHelper.getCellStringValue(row, EnumCell.CELL13.ordinal());
 
 
                     if (email.isEmpty() || fullName.isEmpty()) {
@@ -202,8 +208,6 @@ public class AccountService {
             }
             if(errors.isEmpty()){
                 for(CreateAccountRequest item : users) AbstractAuthService.createUser(item);
-                storageService.uploadPrivateFiles(List.of(file),
-                        SecurityContextHolder.getContext().getAuthentication().getName());
             }
         }
         return errors;

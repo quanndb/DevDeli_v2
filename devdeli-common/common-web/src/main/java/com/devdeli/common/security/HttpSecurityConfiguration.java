@@ -40,10 +40,13 @@ public class HttpSecurityConfiguration {
                         authorizeHttpRequests
                                 .requestMatchers("/").permitAll()
                                 .requestMatchers("/health").permitAll()
-                                .requestMatchers("auth/**").permitAll()
-                                .requestMatchers("certificate/.well-known/jwks.json").permitAll()
-                                .requestMatchers("public/**").permitAll()
-                                .requestMatchers("authenticate/**").permitAll()
+                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/api-docs/**").permitAll()
+                                .requestMatchers("/v3/api-docs/**").permitAll()
+                                .requestMatchers("/swagger-ui/**").permitAll()
+                                .requestMatchers("/certificate/.well-known/jwks.json").permitAll()
+                                .requestMatchers("/public/**").permitAll()
+                                .requestMatchers("/authenticate/**").permitAll()
                                 .requestMatchers("/api/**").authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

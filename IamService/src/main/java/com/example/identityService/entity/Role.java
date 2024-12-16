@@ -28,4 +28,6 @@ public class Role extends Auditable{
     private String description;
     @Column(nullable = false)
     private boolean deleted;
+    @Column(nullable = false)
+    private boolean root;
 }

@@ -1,7 +1,6 @@
 package com.example.identityService.service;
 
 import com.devdeli.common.UserAuthority;
-import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.entity.Account;
 import com.example.identityService.entity.AccountRole;
 import com.example.identityService.entity.Role;
@@ -9,12 +8,13 @@ import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.repository.AccountRepository;
 import com.example.identityService.repository.AccountRoleRepository;
+import com.example.identityService.repository.RolePermissionRepository;
 import com.example.identityService.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class AccountRoleService {
     private final RoleRepository roleRepository;
     private final AccountRoleRepository accountRoleRepository;
     private final AccountRepository accountRepository;
-    private final RoleService roleService;
+    private final RolePermissionRepository rolePermissionRepository;
 
     public List<String> getAllUserRole(String accountId) {
         List<String> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
@@ -33,12 +33,12 @@ public class AccountRoleService {
         return roleRepository.findAllById(foundRoleIds).stream().map(Role::getName).toList();
     }
 
-    public List<String> getAllUserRoleId(String accountId) {
+    public List<Role> getAllUserRoleId(String accountId) {
         List<String> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
                 .stream()
                 .map(AccountRole::getRoleId)
                 .toList();
-        return roleRepository.findAllById(foundRoleIds).stream().map(Role::getId).toList();
+        return roleRepository.findAllById(foundRoleIds);
     }
 
     public boolean assignRolesForUser(String accountId, List<String> roles){
@@ -88,11 +88,12 @@ public class AccountRoleService {
     public UserAuthority getAllUserAuthorities(String email) {
         Account found = accountRepository.findByEmail(email)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
-        List<String> roles = getAllUserRoleId(found.getId());
-        String supperAdminRoleId = roleService.getSupperAdminId();
-        if(roles.contains(supperAdminRoleId)) return new UserAuthority(email, true, List.of());
-        List<String> authorities = new ArrayList<>();
-        roles.forEach(role -> authorities.addAll(roleService.getAllRolePermission(role)));
+        List<Role> roles = getAllUserRoleId(found.getId());
+        boolean isRoot = roles.stream().anyMatch(Role::isRoot);
+        if(isRoot) return new UserAuthority(email, true, List.of());
+        List<String> authorities = rolePermissionRepository.getAllAuthoritiesInListRole(roles.stream()
+                        .map(Role::getId)
+                .collect(Collectors.toList()));
         return new UserAuthority(email, false, authorities);
     }
 }
