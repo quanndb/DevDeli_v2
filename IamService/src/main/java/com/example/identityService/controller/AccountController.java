@@ -6,7 +6,7 @@ import com.example.identityService.DTO.request.AssignRoleRequest;
 import com.example.identityService.DTO.request.CreateAccountRequest;
 import com.example.identityService.DTO.request.SetUserEnableRequest;
 import com.example.identityService.DTO.request.UserPageRequest;
-import com.example.identityService.DTO.response.PageResponse;
+import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.service.AccountRoleService;
 import com.example.identityService.service.AccountService;
@@ -135,7 +135,7 @@ public class AccountController {
                 .build();
     }
 
-    @PostMapping("/{accountId}/authorities")
+    @GetMapping("/{accountId}/authorities")
     public ApiResponse<UserAuthority> getUserAuthorities(@PathVariable String accountId){
         UserAuthority result = accountRoleService.getAllUserAuthorities(accountId);
         return ApiResponse.<UserAuthority>builder()

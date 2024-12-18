@@ -19,9 +19,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.encrypt.KeyStoreKeyFactory;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import java.security.KeyPair;
@@ -119,7 +122,6 @@ public class TokenService implements InitializingBean {
        return NimbusJwtDecoder.withPublicKey((RSAPublicKey) keyPair.getPublic()).build().decode(token);
     }
 
-
     public boolean verifyToken(String token){
         return !isTokenExpired(token) && !isLogout(token);
     }
@@ -148,11 +150,14 @@ public class TokenService implements InitializingBean {
     }
 
     public boolean deActiveToken(Token token){
-        Jwt decodedAccessToken = getTokenDecoded(token.getValue());
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        JwtAuthenticationToken authentication =
+                (JwtAuthenticationToken) securityContext.getAuthentication();
+        Jwt decodeToken = authentication.getToken();
         try{
             redisTemplate.opsForValue()
-                    .set("token_id:"+decodedAccessToken.getId(),
-                            Objects.requireNonNull(decodedAccessToken.getExpiresAt()).toString(),
+                    .set("token_id:"+decodeToken.getId(),
+                            Objects.requireNonNull(decodeToken.getExpiresAt()).toString(),
                             Duration.ofMillis(token.getLifeTime()));
             return true;
         }

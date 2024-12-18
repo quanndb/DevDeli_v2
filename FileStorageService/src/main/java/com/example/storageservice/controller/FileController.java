@@ -1,14 +1,11 @@
 package com.example.storageservice.controller;
 
+import com.devdeli.common.dto.response.PageResponse;
 import com.example.storageservice.DTO.ApiResponse;
-import com.example.storageservice.DTO.request.FilePageRequest;
-import com.example.storageservice.DTO.response.FileResponse;
-import com.example.storageservice.DTO.response.PageResponse;
+import com.devdeli.common.dto.request.FilePageRequest;
+import com.devdeli.common.dto.response.FileResponse;
 import com.example.storageservice.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 @RestController
@@ -30,96 +26,74 @@ public class FileController {
 
 //    public
     @PostMapping("/public/files/upload")
-    public ApiResponse<?> uploadPublicFiles(@RequestParam("files") List<MultipartFile> files,
+    public ApiResponse<List<FileResponse>> uploadPublicFiles(@RequestParam("files") List<MultipartFile> files,
                                      @RequestParam("ownerId") String ownerId
                                      ) throws IOException {
-        return ApiResponse.builder()
+        List<FileResponse> result = fileStorageService.storeFiles(ownerId, true, files);
+        return ApiResponse.<List<FileResponse>>builder()
                 .code(200)
-                .message(ApiResponse.setResponseMessage(fileStorageService.storeFiles(ownerId, true, files)))
+                .result(result)
+                .message(ApiResponse.setResponseMessage(result!=null))
                 .build();
     }
 
-    @GetMapping("/public/files/{fileName}/download")
-    public ResponseEntity<Resource> getFilePublic(@PathVariable String fileName,
+    @GetMapping("/public/files/{fileId}")
+    public ResponseEntity<byte[]> getFilePublic(@PathVariable String fileId,
                                             @RequestParam(required = false) Integer width,
                                             @RequestParam(required = false) Integer height,
                                             @RequestParam(required = false) Double ratio) throws IOException {
-
-        Resource resource = fileStorageService.loadFileAsResource(fileName, true, width, height, ratio);
-
-        String contentType;
-        try {
-            contentType = Files.probeContentType(resource.getFile().toPath());
-        } catch (IOException e) {
-            contentType = "application/octet-stream";
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
+        return fileStorageService.loadFileAsResource(fileId, true, width, height, ratio);
     }
 
-    @GetMapping("/public/files/{fileName}/info")
-    public ApiResponse<FileResponse> getFileInfo(@PathVariable String fileName)  {
+    @GetMapping("/public/files/{fileId}/info")
+    public ApiResponse<FileResponse> getFileInfo(@PathVariable String fileId)  {
         return ApiResponse.<FileResponse>builder()
                 .code(200)
-                .result(fileStorageService.getFileInfo(fileName, true))
+                .result(fileStorageService.getFileInfo(fileId, true))
                 .build();
     }
 
-    @DeleteMapping("/public/files/{fileName}")
-    public ApiResponse<Boolean> deleteFile(@PathVariable String fileName)  {
+    @DeleteMapping("/public/files/{fileId}")
+    public ApiResponse<Boolean> deleteFile(@PathVariable String fileId)  {
         return ApiResponse.<Boolean>builder()
                 .code(200)
-                .message(ApiResponse.setResponseMessage(fileStorageService.deleteFile(fileName, true)))
+                .message(ApiResponse.setResponseMessage(fileStorageService.deleteFile(fileId, true)))
                 .build();
     }
 
 //    private
     @PostMapping("/files/upload")
-    public ApiResponse<?> uploadPrivateFiles(@RequestParam("files") List<MultipartFile> files,
+    public ApiResponse<List<FileResponse>> uploadPrivateFiles(@RequestParam("files") List<MultipartFile> files,
                                              @RequestParam("ownerId") String ownerId) throws IOException {
-        return ApiResponse.builder()
+        List<FileResponse> result = fileStorageService.storeFiles(ownerId, false, files);
+        return ApiResponse.<List<FileResponse>>builder()
                 .code(200)
-                .message(ApiResponse.setResponseMessage(fileStorageService.storeFiles(ownerId, false, files)))
+                .result(result)
+                .message(ApiResponse.setResponseMessage(result!=null))
                 .build();
     }
 
-    @GetMapping("/files/{fileName}/download")
-    public ResponseEntity<Resource> getFilePrivate(@PathVariable String fileName,
+    @GetMapping("/files/{fileId}")
+    public ResponseEntity<byte[]> getFilePrivate(@PathVariable String fileId,
                                             @RequestParam(required = false) Integer width,
                                             @RequestParam(required = false) Integer height,
                                             @RequestParam(required = false) Double ratio) throws IOException {
-
-        Resource resource = fileStorageService.loadFileAsResource(fileName, false, width, height, ratio);
-
-        String contentType;
-        try {
-            contentType = Files.probeContentType(resource.getFile().toPath());
-        } catch (IOException e) {
-            contentType = "application/octet-stream";
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
+        return fileStorageService.loadFileAsResource(fileId, false, width, height, ratio);
     }
 
-    @GetMapping("/files/{fileName}/info")
-    public ApiResponse<FileResponse> getPrivateFileInfo(@PathVariable String fileName)  {
+    @GetMapping("/files/{fileId}/info")
+    public ApiResponse<FileResponse> getPrivateFileInfo(@PathVariable String fileId)  {
         return ApiResponse.<FileResponse>builder()
                 .code(200)
-                .result(fileStorageService.getFileInfo(fileName, false))
+                .result(fileStorageService.getFileInfo(fileId, false))
                 .build();
     }
 
-    @DeleteMapping("/files/{fileName}")
-    public ApiResponse<Boolean> deletePrivateFile(@PathVariable String fileName)  {
+    @DeleteMapping("/files/{fileId}")
+    public ApiResponse<Boolean> deletePrivateFile(@PathVariable String fileId)  {
         return ApiResponse.<Boolean>builder()
                 .code(200)
-                .message(ApiResponse.setResponseMessage(fileStorageService.deleteFile(fileName, false)))
+                .message(ApiResponse.setResponseMessage(fileStorageService.deleteFile(fileId, false)))
                 .build();
     }
 

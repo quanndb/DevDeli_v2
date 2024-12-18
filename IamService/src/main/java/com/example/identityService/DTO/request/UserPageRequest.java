@@ -1,5 +1,6 @@
 package com.example.identityService.DTO.request;
 
+import com.devdeli.common.dto.request.PageRequest;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,7 +8,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-public class UserPageRequest extends PageRequest{
+public class UserPageRequest extends PageRequest {
     private String id = null;
     private String email = null;
     private String fullname = null;

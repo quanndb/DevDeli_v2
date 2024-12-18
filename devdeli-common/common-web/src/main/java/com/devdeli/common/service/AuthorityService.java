@@ -1,4 +1,4 @@
-package com.devdeli.common.security;
+package com.devdeli.common.service;
 
 import com.devdeli.common.UserAuthority;
 
@@ -10,5 +10,4 @@ public interface AuthorityService {
     UserAuthority getUserAuthority(String email);
 
     UserAuthority getClientAuthority(UUID clientId);
-
 }

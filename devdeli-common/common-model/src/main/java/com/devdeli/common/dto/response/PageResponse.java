@@ -1,4 +1,4 @@
-package com.example.identityService.DTO.response;
+package com.devdeli.common.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;

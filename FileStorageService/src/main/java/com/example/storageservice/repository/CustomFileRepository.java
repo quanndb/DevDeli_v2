@@ -1,7 +1,7 @@
 package com.example.storageservice.repository;
 
-import com.example.storageservice.DTO.request.FilePageRequest;
-import com.example.storageservice.DTO.response.FileResponse;
+import com.devdeli.common.dto.request.FilePageRequest;
+import com.devdeli.common.dto.response.FileResponse;
 
 import java.util.List;
 

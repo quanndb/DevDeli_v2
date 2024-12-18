@@ -1,8 +1,8 @@
 package com.example.storageservice.repository.impl;
 
-import com.example.storageservice.DTO.EnumSortDirection;
-import com.example.storageservice.DTO.request.FilePageRequest;
-import com.example.storageservice.DTO.response.FileResponse;
+import com.devdeli.common.dto.request.EnumSortDirection;
+import com.devdeli.common.dto.request.FilePageRequest;
+import com.devdeli.common.dto.response.FileResponse;
 import com.example.storageservice.entity.File;
 import com.example.storageservice.mapper.FileMapper;
 import com.example.storageservice.repository.CustomFileRepository;
@@ -12,8 +12,6 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 
-import java.lang.reflect.Field;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;

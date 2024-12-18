@@ -1,4 +1,4 @@
-package com.example.storageservice.DTO.request;
+package com.devdeli.common.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-public class FilePageRequest extends PageRequest{
+public class FilePageRequest extends PageRequest {
     private String id;
     private String ownerId;
     private String name;

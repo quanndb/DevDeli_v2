@@ -1,11 +1,12 @@
 package com.example.identityService.service;
 
+import com.devdeli.common.service.FileService;
 import com.example.identityService.DTO.EnumCell;
 import com.example.identityService.DTO.EnumSheetHeader;
 import com.example.identityService.DTO.Gender;
 import com.example.identityService.DTO.request.CreateAccountRequest;
 import com.example.identityService.DTO.request.UserPageRequest;
-import com.example.identityService.DTO.response.PageResponse;
+import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.ExcelHelper;
 import com.example.identityService.entity.Account;
@@ -45,6 +46,7 @@ public class AccountService {
     private final AccountMapper accountMapper;
     private final AccountRoleService accountRoleService;
     private final PasswordEncoder passwordEncoder;
+    private final FileService remoteFileService;
 
     public UserResponse getUserinfo(String accountId){
         Account foundAccount = accountRepository.findById(accountId)
@@ -208,6 +210,7 @@ public class AccountService {
             }
             if(errors.isEmpty()){
                 for(CreateAccountRequest item : users) AbstractAuthService.createUser(item);
+                remoteFileService.uploadPrivateFiles(List.of(file), SecurityContextHolder.getContext().getAuthentication().getName());
             }
         }
         return errors;

@@ -1,12 +1,11 @@
-package com.example.storageservice.DTO.request;
+package com.devdeli.common.dto.request;
 
-import com.example.storageservice.DTO.EnumSortDirection;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class PageRequest {
+public class PageRequest{
     private int page = 1;
     private int size = 10;
     private String query = "";

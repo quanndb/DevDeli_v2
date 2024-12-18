@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
@@ -50,6 +51,10 @@ public class ActionLogFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain filterChain) throws ServletException, IOException {
         Instant start = Instant.now();
         HttpServletRequest httpServletRequest = servletRequest;
+        ContentCachingRequestWrapper requestWrapper =
+                new ContentCachingRequestWrapper(servletRequest);
+        requestWrapper.setCharacterEncoding("UTF-8");
+
         ContentCachingResponseWrapper cachedResponse =
                 new ContentCachingResponseWrapper(servletResponse);
         cachedResponse.setCharacterEncoding("UTF-8");

@@ -1,6 +1,6 @@
 package com.example.storageservice.mapper;
 
-import com.example.storageservice.DTO.response.FileResponse;
+import com.devdeli.common.dto.response.FileResponse;
 import com.example.storageservice.entity.File;
 import org.mapstruct.Mapper;
 

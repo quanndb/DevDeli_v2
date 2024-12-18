@@ -1,9 +1,12 @@
 package com.example.identityService.service.auth;
 
+import com.devdeli.common.dto.request.ClientTokenRequest;
+import com.devdeli.common.dto.response.ClientTokenResponse;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.CreateAccountRequest;
 import com.example.identityService.DTO.request.LoginRequest;
 import com.example.identityService.DTO.request.RegisterRequest;
+import com.example.identityService.DTO.response.KeyCloakClientCredentialsResponse;
 import com.example.identityService.DTO.response.LoginResponse;
 import com.example.identityService.config.KeycloakProvider;
 import com.example.identityService.entity.Account;
@@ -45,6 +48,20 @@ public class KeycloakService extends AbstractAuthService{
         AccessTokenResponse response = keycloakProvider.getKeycloak()
                 .tokenManager().getAccessToken();
         return new LoginResponse(response.getToken(), response.getRefreshToken());
+    }
+
+    @Override
+    public ClientTokenResponse performGetClientToken(ClientTokenRequest request) {
+        String body = String.format("client_id=%s&client_secret=%s&grant_type=%s",
+                request.getClientId(), request.getClientSecret(), "client_credentials");
+
+        return WebClient.create(KEYCLOAK_AUTH_URL)
+                .post()
+                .uri("/realms/IAM2/protocol/openid-connect/token")
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(ClientTokenResponse.class).block();
     }
 
     @Override

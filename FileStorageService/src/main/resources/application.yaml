@@ -3,10 +3,14 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri:
+          jwk-set-uris:
             sso: ${JWK_SSO_URL:http://localhost:8081/auth/realms/IAM2/protocol/openid-connect/certs}
             internal: ${JWK_INTERNAL_URL:http://localhost:2818/api/v1.0.0/certificate/.well-known/jwks.json}
 
 app:
+  storage:
+    internal-url: http://localhost:2819
   iam:
     internal-url: http://localhost:2818
+    client-id: storage-client
+    client-secret: yIuUC9uYOfDIuq1bhkSU5Y3MM7gxSSkx

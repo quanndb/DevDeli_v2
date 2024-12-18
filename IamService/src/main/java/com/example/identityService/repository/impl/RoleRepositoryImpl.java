@@ -1,6 +1,6 @@
 package com.example.identityService.repository.impl;
 
-import com.example.identityService.DTO.EnumSortDirection;
+import com.devdeli.common.dto.request.EnumSortDirection;
 import com.example.identityService.DTO.request.RolePageRequest;
 import com.example.identityService.DTO.response.RoleResponse;
 import com.example.identityService.Util.StrUtils;

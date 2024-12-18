@@ -1,8 +1,8 @@
 package com.example.storageservice.service;
 
-import com.example.storageservice.DTO.request.FilePageRequest;
-import com.example.storageservice.DTO.response.FileResponse;
-import com.example.storageservice.DTO.response.PageResponse;
+import com.devdeli.common.dto.request.FilePageRequest;
+import com.devdeli.common.dto.response.FileResponse;
+import com.devdeli.common.dto.response.PageResponse;
 import com.example.storageservice.entity.File;
 import com.example.storageservice.exception.AppExceptions;
 import com.example.storageservice.exception.ErrorCode;
@@ -13,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,18 +36,16 @@ public class FileStorageService {
     private final FileStorageUtil fileStorageUtil;
 
     //  --------------------------------functions---------------------------------------------------
-    public boolean storeFiles(String ownerId, boolean isPublic, List<MultipartFile> files) throws IOException {
+    public List<FileResponse> storeFiles(String ownerId, boolean isPublic, List<MultipartFile> files) throws IOException {
         List<File> saveFiles = new ArrayList<>();
         for(MultipartFile item : files){
             saveFiles.add(fileStorageUtil.storeFile(item, ownerId, isPublic));
         }
-
-        fileRepository.saveAll(saveFiles);
-        return true;
+        return fileMapper.toListFileResponse(fileRepository.saveAll(saveFiles));
     }
 
-    public Resource loadFileAsResource(String fileName, boolean isPublic, Integer width, Integer height, Double ratio) throws IOException {
-        File foundFile = findFile(fileName);
+    public ResponseEntity<byte[]> loadFileAsResource(String fileId, boolean isPublic, Integer width, Integer height, Double ratio) throws IOException {
+        File foundFile = findFile(fileId);
 
         if(foundFile.isSharing() != isPublic) throw new AppExceptions(ErrorCode.FILE_NOT_FOUND);
 
@@ -54,18 +55,31 @@ public class FileStorageService {
         if (!resource.exists()) {
             throw new AppExceptions(ErrorCode.FILE_NOT_FOUND);
         }
-        return isImageFile(foundFile) ? resizeImage(filePath, width, height, ratio) : resource;
+        Resource returnResource = isImageFile(foundFile) ? resizeImage(filePath, width, height, ratio)
+                : resource;
+
+        String contentType;
+        try {
+            contentType = Files.probeContentType(returnResource.getFile().toPath());
+        } catch (IOException e) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + returnResource.getFilename() + "\"")
+                .body(resource.getContentAsByteArray());
     }
 
-    public FileResponse getFileInfo(String fileName, boolean isPublic) {
-        File foundFile = findFile(fileName);
+    public FileResponse getFileInfo(String fileId, boolean isPublic) {
+        File foundFile = findFile(fileId);
         if(foundFile.isSharing() != isPublic) throw new AppExceptions(ErrorCode.FILE_NOT_FOUND);
 
         return fileMapper.toFileResponse(foundFile);
     }
 
-    public boolean deleteFile(String fileName, boolean isPublic){
-        File foundFile = findFile(fileName);
+    public boolean deleteFile(String fileId, boolean isPublic){
+        File foundFile = findFile(fileId);
         if(foundFile.isSharing() != isPublic) throw new AppExceptions(ErrorCode.FILE_NOT_FOUND);
         foundFile.setDeleted(true);
         fileRepository.save(foundFile);

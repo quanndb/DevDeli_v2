@@ -1,5 +1,7 @@
 package com.example.identityService.service.auth;
 
+import com.devdeli.common.dto.request.ClientTokenRequest;
+import com.devdeli.common.dto.response.ClientTokenResponse;
 import com.example.identityService.DTO.EmailEnum;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.CreateAccountRequest;
@@ -56,6 +58,7 @@ public abstract class AbstractAuthService{
     private static final List<AbstractAuthService> children = new ArrayList<>();
 
     public abstract LoginResponse performLogin(LoginRequest request);
+    public abstract ClientTokenResponse performGetClientToken(ClientTokenRequest request);
     public abstract LoginResponse performLoginWithGoogle(String email, String password, String ip);
     public abstract boolean logout(String accessToken, String refreshToken);
     public abstract Object getNewToken(String refreshToken);

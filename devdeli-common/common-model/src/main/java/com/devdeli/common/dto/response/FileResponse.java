@@ -1,4 +1,4 @@
-package com.example.storageservice.DTO.response;
+package com.devdeli.common.dto.response;
 
 import lombok.Getter;
 import lombok.Setter;

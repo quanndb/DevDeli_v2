@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @EnableJpaAuditing
 @EnableFeignClients
-@SpringBootApplication(scanBasePackages = {"com.example.identityService", "com.devdeli.common"})
+@SpringBootApplication
 public class IdentityServiceApplication {
 
 	public static void main(String[] args) {

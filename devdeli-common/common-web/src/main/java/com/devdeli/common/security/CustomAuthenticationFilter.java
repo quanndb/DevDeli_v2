@@ -2,6 +2,7 @@ package com.devdeli.common.security;
 
 import com.devdeli.common.UserAuthentication;
 import com.devdeli.common.UserAuthority;
+import com.devdeli.common.service.AuthorityService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +23,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,33 +45,44 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 (JwtAuthenticationToken) securityContext.getAuthentication();
         Jwt token = authentication.getToken();
 
-        Boolean isRoot = Boolean.FALSE;
+        String clientId = authentication.getToken().getClaim("client_id");
 
-        UserAuthority optionalUserAuthority = enrichAuthority(token);
-        //@TODO enrich
+        if(clientId != null) {
+            User principal = new User(clientId, "", Set.of());
+            AbstractAuthenticationToken auth =
+                    new UserAuthentication(principal, token, null, true, false);
 
-        Set<SimpleGrantedAuthority> grantedPermissions = new HashSet<>();
-        if(optionalUserAuthority != null){
-            isRoot = optionalUserAuthority.getIsRoot();
-            grantedPermissions = optionalUserAuthority.getGrantedPermissions().stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toSet());
-            grantedPermissions.add(new SimpleGrantedAuthority(isRoot? "root" : "nonRoot"));
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            filterChain.doFilter(request, response);
         }
+        else{
+            Boolean isRoot = Boolean.FALSE;
 
-        String username;
-        if (StringUtils.hasText(token.getClaimAsString("preferred_username"))) {
-            username = token.getClaimAsString("preferred_username");
-        } else {
-            username = token.getClaimAsString("sub");
+            UserAuthority optionalUserAuthority = enrichAuthority(token);
+            //@TODO enrich
+
+            Set<SimpleGrantedAuthority> grantedPermissions = new HashSet<>();
+            if(optionalUserAuthority != null){
+                isRoot = optionalUserAuthority.getIsRoot();
+                grantedPermissions = optionalUserAuthority.getGrantedPermissions().stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toSet());
+            }
+
+            String username;
+            if (StringUtils.hasText(token.getClaimAsString("preferred_username"))) {
+                username = token.getClaimAsString("preferred_username");
+            } else {
+                username = token.getClaimAsString("sub");
+            }
+
+            User principal = new User(username, "", grantedPermissions);
+            AbstractAuthenticationToken auth =
+                    new UserAuthentication(principal, token, grantedPermissions, isRoot, !isRoot);
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            filterChain.doFilter(request, response);
         }
-
-        User principal = new User(username, "", grantedPermissions);
-        AbstractAuthenticationToken auth =
-                new UserAuthentication(principal, token, grantedPermissions, isRoot, !isRoot);
-
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        filterChain.doFilter(request, response);
     }
 
     @Override

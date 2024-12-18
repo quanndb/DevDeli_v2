@@ -1,5 +1,9 @@
 package com.example.identityService.service.auth;
 
+import com.devdeli.common.dto.request.ClientTokenRequest;
+import com.devdeli.common.dto.response.ClientTokenResponse;
+import com.devdeli.common.dto.response.FileResponse;
+import com.devdeli.common.service.FileService;
 import com.example.identityService.DTO.EmailEnum;
 import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
@@ -8,7 +12,6 @@ import com.example.identityService.DTO.request.EmailRequest;
 import com.example.identityService.DTO.request.LoginRequest;
 import com.example.identityService.DTO.request.RegisterRequest;
 import com.example.identityService.DTO.request.UpdateProfileRequest;
-import com.example.identityService.DTO.response.CloudResponse;
 import com.example.identityService.DTO.response.LoginResponse;
 import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.TimeConverter;
@@ -18,16 +21,13 @@ import com.example.identityService.DTO.Token;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.mapper.AccountMapper;
-import com.example.identityService.mapper.CloudImageMapper;
 import com.example.identityService.repository.AccountRepository;
 import com.example.identityService.repository.LoggerRepository;
 import com.example.identityService.service.AccountRoleService;
-import com.example.identityService.service.CloudinaryService;
 import com.example.identityService.service.EmailService;
 import com.example.identityService.service.TokenService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,28 +38,24 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class DefaultAuthService extends AbstractAuthService {
 
-    @NonFinal
     @Value(value = "${app.baseUrl}")
     private String APP_BASEURL;
+    @Value(value = "${app.storage.internal-url}")
+    private String STORAGE_BASEURL;
 
-    @NonFinal
     @Value(value = "${security.authentication.max-forgot-password-attempt}")
     private Integer MAX_FORGOT_PASSWORD_ATTEMPT;
-    @NonFinal
     @Value(value = "${security.authentication.delay-forgot-password}")
     private String DELAY_FORGOT_PASSWORD;
 
-    @NonFinal
     @Value(value = "${security.authentication.jwt.access-token-life-time}")
     private String ACCESS_TOKEN_LIFE_TIME;
-    @NonFinal
     @Value(value = "${security.authentication.jwt.refresh-token-life-time}")
     private String REFRESH_TOKEN_LIFE_TIME;
     @Value(value = "${security.authentication.jwt.email-token-life-time}")
@@ -68,11 +64,9 @@ public class DefaultAuthService extends AbstractAuthService {
     private final AccountRepository accountRepository;
     private final TokenService tokenService;
 
-    private final CloudinaryService cloudinaryService;
-    private final CloudImageMapper cloudImageMapper;
     private final EmailService emailService;
     private final LoggerRepository loggerRepository;
-
+    private final FileService fileService;
 
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -86,6 +80,11 @@ public class DefaultAuthService extends AbstractAuthService {
     @Override
     public LoginResponse performLogin(LoginRequest request){
        return loginProcess(request.getEmail(), request.getIp());
+    }
+
+    @Override
+    public ClientTokenResponse performGetClientToken(ClientTokenRequest request) {
+        return new ClientTokenResponse(tokenService.generateTempEmailToken(request.getClientId(),""));
     }
 
     @Override
@@ -192,18 +191,27 @@ public class DefaultAuthService extends AbstractAuthService {
 
     public boolean updateProfile(UpdateProfileRequest request, MultipartFile image) throws IOException {
         Account foundUser = getCurrentUser();
-        if(request != null){
+        if (request != null) {
             accountMapper.updateAccount(foundUser, request);
-        }
-        if(request != null && request.getCloudImageUrl() == null && image != null) {
-            String oldCloudId = foundUser.getCloudImageId();
-            if(oldCloudId != null){
-                cloudinaryService.delete(oldCloudId);
+            if (request.getCloudImageUrl() != null) {
+                String oldCloudId = foundUser.getCloudImageId();
+                if (oldCloudId != null) {
+                    fileService.deletePublicFile(oldCloudId);
+                }
+                foundUser.setCloudImageUrl(request.getCloudImageUrl());
+                foundUser.setCloudImageId(null);
+                accountRepository.save(foundUser);
+                return true;
             }
-            Map<?,?> cloudResponse = cloudinaryService.upload(image);
-            CloudResponse cloudResponseDTO = cloudImageMapper.toCloudResponse(cloudResponse);
-            foundUser.setCloudImageId(cloudResponseDTO.getPublicId());
-            foundUser.setCloudImageUrl(cloudResponseDTO.getUrl());
+        }
+        if (image != null) {
+            String oldCloudId = foundUser.getCloudImageId();
+            if (oldCloudId != null) {
+                fileService.deletePublicFile(oldCloudId);
+            }
+            FileResponse fileResponse = fileService.uploadPublicFiles(List.of(image), foundUser.getEmail()).getFirst();
+            foundUser.setCloudImageId(fileResponse.getPath());
+            foundUser.setCloudImageUrl(STORAGE_BASEURL + "/api/v1.0.0/public/files/" + fileResponse.getPath());
         }
         accountRepository.save(foundUser);
         return true;
@@ -326,6 +334,10 @@ public class DefaultAuthService extends AbstractAuthService {
                 .ip(ip)
                 .build());
         accountRoleService.assignRolesForUser(savedAccount.getId(), List.of(EnumRole.USER.getName()));
+    }
+
+    public boolean introspect(String token) {
+        return tokenService.verifyToken(token);
     }
     // -----------------------------Utilities end-------------------------------
 }

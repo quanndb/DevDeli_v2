@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-
 public class JwkAuthenticationManagerResolver implements
         AuthenticationManagerResolver<HttpServletRequest> {
 

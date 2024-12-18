@@ -1,10 +1,12 @@
 package com.example.identityService.controller;
 
+import com.devdeli.common.dto.request.ClientTokenRequest;
+import com.devdeli.common.dto.response.ClientTokenResponse;
 import com.example.identityService.DTO.ApiResponse;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.ForgotPasswordRequest;
 import com.example.identityService.DTO.request.LoginRequest;
-import com.example.identityService.DTO.request.LogoutRequest;
+import com.devdeli.common.dto.request.LogoutRequest;
 import com.example.identityService.DTO.request.RefreshTokenRequest;
 import com.example.identityService.DTO.request.RegisterRequest;
 import com.example.identityService.DTO.request.ResetPasswordRequest;
@@ -51,11 +53,30 @@ public class AuthController {
                 .build();
     }
 
+    @PostMapping("/client-token")
+    public ApiResponse<ClientTokenResponse> getClientToken(@RequestBody ClientTokenRequest clientTokenRequest) {
+        ClientTokenResponse result = authServiceFactory.getAuthService().performGetClientToken(clientTokenRequest);
+        return ApiResponse.<ClientTokenResponse>builder()
+                .code(200)
+                .result(result)
+                .build();
+    }
+
     @PostMapping("/logout")
     public ApiResponse<Boolean> logout(HttpServletRequest requestHeader, @RequestBody @Valid LogoutRequest requestBody){
         String accessToken = requestHeader.getHeader("Authorization").substring(7);
         String refreshToken = requestBody.getRefreshToken();
-        boolean result = authServiceFactory.getAuthService().logout(accessToken, refreshToken);
+        boolean result = authService.logout(accessToken, refreshToken);
+        return ApiResponse.<Boolean>builder()
+                .code(200)
+                .message(ApiResponse.setResponseMessage(result))
+                .build();
+    }
+
+    @PostMapping("/introspect")
+    public ApiResponse<Boolean> introspect(HttpServletRequest requestHeader, @RequestBody @Valid LogoutRequest requestBody){
+        String token = requestHeader.getHeader("Authorization").substring(7);
+        boolean result = authService.introspect(token);
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))

@@ -2,13 +2,10 @@ package com.example.identityService.controller;
 
 import com.example.identityService.DTO.ApiResponse;
 import com.example.identityService.DTO.request.CreatePermissionRequest;
-import com.example.identityService.DTO.request.PageRequest;
 import com.example.identityService.DTO.request.PermissionPageRequest;
-import com.example.identityService.DTO.response.PageResponse;
+import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.DTO.response.PermissionResponse;
-import com.example.identityService.entity.Permission;
 import com.example.identityService.service.PermissionService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -18,7 +18,6 @@ public class RedisConfig {
     @Value("${app.data.redis.port}")
     private int redisPort;
 
-
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
         return new LettuceConnectionFactory(new RedisStandaloneConfiguration(redisHost, redisPort));

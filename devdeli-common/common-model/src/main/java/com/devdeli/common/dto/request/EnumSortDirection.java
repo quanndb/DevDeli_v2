@@ -1,4 +1,4 @@
-package com.example.identityService.DTO;
+package com.devdeli.common.dto.request;
 
 public enum EnumSortDirection {
     ASC,

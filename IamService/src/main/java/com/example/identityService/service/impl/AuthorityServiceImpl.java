@@ -1,9 +1,8 @@
 package com.example.identityService.service.impl;
 
 import com.devdeli.common.UserAuthority;
-import com.devdeli.common.security.AuthorityService;
+import com.devdeli.common.service.AuthorityService;
 import com.example.identityService.service.AccountRoleService;
-import com.example.identityService.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;

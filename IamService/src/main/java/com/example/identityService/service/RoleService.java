@@ -2,7 +2,7 @@ package com.example.identityService.service;
 
 import com.example.identityService.DTO.request.CreateRoleRequest;
 import com.example.identityService.DTO.request.RolePageRequest;
-import com.example.identityService.DTO.response.PageResponse;
+import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.DTO.response.RoleResponse;
 import com.example.identityService.entity.Role;
 import com.example.identityService.exception.AppExceptions;

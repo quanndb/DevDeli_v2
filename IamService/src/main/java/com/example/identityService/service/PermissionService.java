@@ -1,18 +1,15 @@
 package com.example.identityService.service;
 
-import com.example.identityService.DTO.EnumSortDirection;
 import com.example.identityService.DTO.request.CreatePermissionRequest;
 import com.example.identityService.DTO.request.PermissionPageRequest;
-import com.example.identityService.DTO.response.PageResponse;
+import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.DTO.response.PermissionResponse;
-import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.entity.Permission;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.mapper.PermissionMapper;
 import com.example.identityService.repository.PermissionRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
