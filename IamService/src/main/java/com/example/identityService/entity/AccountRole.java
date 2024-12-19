@@ -1,5 +1,6 @@
 package com.example.identityService.entity;
 
+import com.devdeli.common.Auditable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @Table(name = "account_role")
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class AccountRole extends Auditable{
+public class AccountRole extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;

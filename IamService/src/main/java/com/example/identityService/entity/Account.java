@@ -1,5 +1,6 @@
 package com.example.identityService.entity;
 
+import com.devdeli.common.Auditable;
 import com.example.identityService.DTO.Gender;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,7 +23,7 @@ import java.time.LocalDate;
 @Table(name = "account")
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class Account extends Auditable{
+public class Account extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;

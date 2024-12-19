@@ -41,7 +41,7 @@ public class FileStorageService {
         for(MultipartFile item : files){
             saveFiles.add(fileStorageUtil.storeFile(item, ownerId, isPublic));
         }
-        return fileMapper.toListFileResponse(fileRepository.saveAll(saveFiles));
+        return fileMapper.toListFileResponse(fileRepository.saveAllFiles(saveFiles));
     }
 
     public ResponseEntity<byte[]> loadFileAsResource(String fileId, boolean isPublic, Integer width, Integer height, Double ratio) throws IOException {
@@ -105,7 +105,7 @@ public class FileStorageService {
 
 //  --------------------------------utilities---------------------------------------------------
     private File findFile(String fileName) {
-        return fileRepository.findByPathAndDeletedIsFalse(fileName)
+        return fileRepository.getFile(fileName)
                 .orElseThrow(() -> new AppExceptions(ErrorCode.FILE_NOT_FOUND));
     }
 

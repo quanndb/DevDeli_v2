@@ -1,4 +1,4 @@
-package com.example.identityService.entity;
+package com.devdeli.common;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

@@ -4,6 +4,7 @@ import com.devdeli.common.dto.request.ClientTokenRequest;
 import com.devdeli.common.dto.response.ClientTokenResponse;
 import com.devdeli.common.dto.response.FileResponse;
 import com.devdeli.common.service.FileService;
+import com.devdeli.common.service.RedisService;
 import com.example.identityService.DTO.EmailEnum;
 import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
@@ -29,13 +30,13 @@ import com.example.identityService.service.TokenService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -67,8 +68,7 @@ public class DefaultAuthService extends AbstractAuthService {
     private final EmailService emailService;
     private final LoggerRepository loggerRepository;
     private final FileService fileService;
-
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisService redisService;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -93,7 +93,7 @@ public class DefaultAuthService extends AbstractAuthService {
     }
 
     @Override
-    public boolean logout(String accessToken, String refreshToken) {
+    public boolean logout(String accessToken, String refreshToken) throws ParseException {
         boolean isDisabledAccessToken = tokenService.deActiveToken(new Token(accessToken,
                 TimeConverter.convertToMilliseconds(ACCESS_TOKEN_LIFE_TIME)));
         boolean isDisabledRefreshToken = tokenService.deActiveToken(new Token(refreshToken,
@@ -184,7 +184,7 @@ public class DefaultAuthService extends AbstractAuthService {
 
     // -----------------------------User information start-------------------------------
     // profile
-    public UserResponse getProfile(String token) {
+    public UserResponse getProfile() {
         Account foundUser = getCurrentUser();
         return accountMapper.toUserResponse(foundUser);
     }
@@ -249,11 +249,11 @@ public class DefaultAuthService extends AbstractAuthService {
     }
 
     @Override
-    public boolean performResetPassword(String token, String newPassword, String ip) {
+    public boolean performResetPassword(String token, String newPassword, String ip) throws ParseException {
         String email = tokenService.getTokenDecoded(token).getSubject();
 
         String key = String.join("","forgot-password-attempt:", email);
-        String attempValueString = redisTemplate.opsForValue().get(key);
+        String attempValueString = redisService.getValue(key);
 
         String activeToken = attempValueString != null ? attempValueString.split("@")[1] : null;
         if(!tokenService.verifyToken(token) || email == null || !Objects.equals(activeToken, token))
@@ -280,7 +280,7 @@ public class DefaultAuthService extends AbstractAuthService {
         String forgotPasswordToken = tokenService.generateTempEmailToken(email, ip);
 
         String key = String.join("","forgot-password-attempt:", email);
-        String attempValueString = redisTemplate.opsForValue().get(key);
+        String attempValueString = redisService.getValue(key);
 
         Integer attemptTime = attempValueString != null ? Integer.parseInt(attempValueString.split("@")[0])+1 : 1;
 
@@ -289,7 +289,7 @@ public class DefaultAuthService extends AbstractAuthService {
 
         String value = String.join("@", attemptTime.toString(), forgotPasswordToken);
 
-        redisTemplate.opsForValue().set(key, value,
+        redisService.putValue(key, value,
                 Duration.ofMillis(TimeConverter.convertToMilliseconds(DELAY_FORGOT_PASSWORD)));
 
         String verifyUrl = String.join("",APP_BASEURL,"auth/resetPassword?token=",forgotPasswordToken);

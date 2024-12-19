@@ -1,10 +1,13 @@
 package com.devdeli.common.security;
 
 import com.devdeli.common.config.JwtProperties;
+import com.devdeli.common.enums.ErrorCode;
+import com.devdeli.common.exception.AppExceptions;
 import com.nimbusds.jwt.JWTParser;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationManagerResolver;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
@@ -37,13 +40,14 @@ public class JwkAuthenticationManagerResolver implements
         try {
             if (StringUtils.hasText((String) JWTParser.parse(token).getJWTClaimsSet().getClaim("internal"))) {
                 return "internal";
-            } else if (StringUtils.hasText((String) JWTParser.parse(token).getJWTClaimsSet().getClaim("preferred_username"))) {
+            } else if (StringUtils.hasText((String) JWTParser.parse(token).getJWTClaimsSet().getClaim("preferred_username")) ||
+                    StringUtils.hasText((String) JWTParser.parse(token).getJWTClaimsSet().getClaim("azp"))) {
                 return "sso";
             } else {
-                throw new RuntimeException("INVALID_INPUT");
+                throw new AuthenticationException("Unknown token") {};
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException(e);
+            throw new AuthenticationException("Invalid token") {};
         }
     }
 

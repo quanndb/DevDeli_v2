@@ -1,4 +1,4 @@
-package com.example.identityService.config;
+package com.devdeli.common.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.AuditorAware;

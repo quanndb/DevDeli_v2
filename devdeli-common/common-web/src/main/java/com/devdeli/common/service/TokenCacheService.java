@@ -1,5 +1,7 @@
 package com.devdeli.common.service;
 
+import java.text.ParseException;
+
 public interface TokenCacheService {
 
 //    String INVALID_REFRESH_TOKEN_CACHE = "invalid-refresh-token";
@@ -9,7 +11,7 @@ public interface TokenCacheService {
 
     void invalidRefreshToken(String refreshToken);
 
-    void logout(String accessToken, String refreshToken);
+    void logout(String accessToken, String refreshToken) throws ParseException;
 
     boolean isExisted(String token);
 

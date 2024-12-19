@@ -18,8 +18,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -39,6 +37,7 @@ public class HttpSecurityConfiguration {
     private final CustomLogFilter customLogFilter;
     private final ForbiddenTokenFilter forbiddenTokenFilter;
     private final JwtProperties jwtProperties;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -59,7 +58,8 @@ public class HttpSecurityConfiguration {
                                 .anyRequest().authenticated() // save out of the bug 403!!!
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .authenticationManagerResolver(this.jwkResolver(this.jwtProperties)));
+                        .authenticationManagerResolver(this.jwkResolver(this.jwtProperties))
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint));
         http.addFilterAfter(this.forbiddenTokenFilter, BearerTokenAuthenticationFilter.class);
         http.addFilterAfter(this.customAuthenticationFilter, BearerTokenAuthenticationFilter.class);
         http.addFilterAfter(this.actionLogFilter, BearerTokenAuthenticationFilter.class);
@@ -68,25 +68,7 @@ public class HttpSecurityConfiguration {
         return http.build();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
     public AuthenticationManagerResolver<HttpServletRequest> jwkResolver(JwtProperties jwtProperties) {
         return new JwkAuthenticationManagerResolver(jwtProperties);
-    }
-
-    @Bean
-    public MethodSecurityExpressionHandler methodSecurityExpressionHandler(RegexPermissionEvaluator permissionEvaluator) {
-        log.info("Configuring MethodSecurityExpressionHandler with permissionEvaluator");
-        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
-        expressionHandler.setPermissionEvaluator(permissionEvaluator);
-        return expressionHandler;
-    }
-
-    @Bean
-    public RegexPermissionEvaluator regexPermissionEvaluator() {
-        return new RegexPermissionEvaluator();
     }
 }

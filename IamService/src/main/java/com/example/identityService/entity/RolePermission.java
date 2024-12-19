@@ -1,5 +1,6 @@
 package com.example.identityService.entity;
 
+import com.devdeli.common.Auditable;
 import com.example.identityService.DTO.PermissionScope;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Entity;
@@ -22,7 +23,7 @@ import lombok.Setter;
 @Table(name = "role_permission")
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class RolePermission extends Auditable{
+public class RolePermission extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;

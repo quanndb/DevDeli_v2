@@ -26,6 +26,6 @@ public interface IamClient {
     @PostMapping("/api/v1.0.0/auth/logout")
     ApiResponse<Boolean> logout(@RequestBody LogoutRequest request, @RequestHeader(name = "Authorization") String token);
 
-    @PostMapping("/api/v1.0.0/auth/introspect")
+    @GetMapping("/api/v1.0.0/auth/introspect")
     ApiResponse<Boolean> introspect(@RequestHeader(name = "Authorization") String token);
 }

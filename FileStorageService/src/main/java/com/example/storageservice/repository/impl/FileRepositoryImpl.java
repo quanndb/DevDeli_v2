@@ -4,8 +4,10 @@ import com.devdeli.common.dto.request.EnumSortDirection;
 import com.devdeli.common.dto.request.FilePageRequest;
 import com.devdeli.common.dto.response.FileResponse;
 import com.example.storageservice.entity.File;
+import com.example.storageservice.entity.FileAction;
 import com.example.storageservice.mapper.FileMapper;
 import com.example.storageservice.repository.CustomFileRepository;
+import com.example.storageservice.repository.FileActionRepository;
 import com.example.storageservice.util.StrUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -22,6 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FileRepositoryImpl implements CustomFileRepository {
     private final FileMapper fileMapper;
+    private final FileActionRepository fileActionRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -45,6 +48,25 @@ public class FileRepositoryImpl implements CustomFileRepository {
         Query query = entityManager.createQuery(sql, Long.class);
         values.forEach(query::setParameter);
         return (Long) query.getSingleResult();
+    }
+
+    @Override
+    public void saveFileImportAction(List<File> files) {
+        List<FileAction> saved = files.stream()
+                .map(item -> FileAction.builder()
+                        .fileId(item.getPath())
+                        .action("Save file")
+                        .build())
+                .toList();
+        fileActionRepository.saveAll(saved);
+    }
+
+    @Override
+    public void saveFileExportAction(String fileName) {
+        fileActionRepository.save(FileAction.builder()
+                        .fileId(fileName)
+                        .action("Get file")
+                .build());
     }
 
     private String createWhereQuery(FilePageRequest request, Map<String, Object> values) {
