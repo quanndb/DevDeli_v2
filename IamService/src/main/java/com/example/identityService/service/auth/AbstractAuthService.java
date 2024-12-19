@@ -2,6 +2,7 @@ package com.example.identityService.service.auth;
 
 import com.devdeli.common.dto.request.ClientTokenRequest;
 import com.devdeli.common.dto.response.ClientTokenResponse;
+import com.devdeli.common.service.RedisService;
 import com.example.identityService.DTO.EmailEnum;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.CreateAccountRequest;
@@ -23,9 +24,9 @@ import com.example.identityService.service.EmailService;
 import com.example.identityService.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -53,16 +54,16 @@ public abstract class AbstractAuthService{
     @Autowired
     private TokenService tokenService;
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    private RedisService redisService;
 
     private static final List<AbstractAuthService> children = new ArrayList<>();
 
     public abstract LoginResponse performLogin(LoginRequest request);
     public abstract ClientTokenResponse performGetClientToken(ClientTokenRequest request);
     public abstract LoginResponse performLoginWithGoogle(String email, String password, String ip);
-    public abstract boolean logout(String accessToken, String refreshToken);
+    public abstract boolean logout(String accessToken, String refreshToken) throws ParseException;
     public abstract Object getNewToken(String refreshToken);
-    public abstract boolean performResetPassword(String token, String newPassword, String ip);
+    public abstract boolean performResetPassword(String token, String newPassword, String ip) throws ParseException;
     public abstract boolean performChangePassword(ChangePasswordRequest request, String ip);
     public abstract boolean performRegister(RegisterRequest request);
     public abstract boolean performCreateUser(CreateAccountRequest request);
@@ -83,13 +84,12 @@ public abstract class AbstractAuthService{
             boolean success = passwordEncoder.matches(request.getPassword(), account.getPassword());
             if(!success){
                 String key = String.join("","login-attempt:", account.getEmail());
-                String attemptTimeString = redisTemplate.opsForValue()
-                        .get(key);
+                String attemptTimeString =redisService.getValue(key);
 
                 if(attemptTimeString != null && Integer.parseInt(attemptTimeString) == MAX_LOGIN_ATTEMPT)
                     throw new AppExceptions(ErrorCode.TOO_MUCH_LOGIN_FAIL);
                 int value = attemptTimeString != null ? Integer.parseInt(attemptTimeString) + 1 : 1;
-                redisTemplate.opsForValue().set(key, Integer.toString(value),
+                redisService.putValue(key, Integer.toString(value),
                         Duration.ofMillis(TimeConverter.convertToMilliseconds(LOGIN_DELAY_FAIL)));
                 throw new AppExceptions(ErrorCode.INVALID_EMAIL_PASSWORD);
             }
@@ -144,7 +144,7 @@ public abstract class AbstractAuthService{
         return true;
     }
 
-    public static boolean resetPassword(ResetPasswordRequest request, String ip){
+    public static boolean resetPassword(ResetPasswordRequest request, String ip) throws ParseException {
         for (AbstractAuthService child : children) {
             child.performResetPassword(request.getToken(), request.getNewPassword(), ip);
         }

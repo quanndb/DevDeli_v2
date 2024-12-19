@@ -1,5 +1,6 @@
 package com.example.identityService.service;
 
+import com.devdeli.common.service.RedisService;
 import com.example.identityService.Util.TimeConverter;
 import com.example.identityService.config.AuthenticationProperties;
 import com.example.identityService.entity.Account;
@@ -9,6 +10,7 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.JWTParser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -18,20 +20,16 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.encrypt.KeyStoreKeyFactory;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
+import java.text.ParseException;
 import java.time.Duration;
 import java.util.Date;
-import java.util.Objects;
 import java.util.UUID;
 
 @Component
@@ -48,9 +46,7 @@ public class TokenService implements InitializingBean {
 
     private KeyPair keyPair;
     private final AuthenticationProperties properties;
-
-    private final RedisTemplate<String, String> redisTemplate;
-
+    private final RedisService redisService;
     private final AccountRoleService accountRoleService;
 
     @Override
@@ -137,27 +133,32 @@ public class TokenService implements InitializingBean {
     }
 
     public boolean isTokenExpired(String token){
-        Claims claims = extractClaims(token);
-        return claims != null && claims.getExpiration().before(new Date());
+        try{
+            Date expirationTime = JWTParser.parse(token).getJWTClaimsSet().getExpirationTime();
+            return expirationTime != null && expirationTime.before(new Date());
+        } catch (ParseException e) {
+            return false;
+        }
+
     }
 
     public boolean isLogout(String token){
-        Claims claims = extractClaims(token);
-        String tokenId = claims == null ? null : claims.getId();
-        if(tokenId == null) return false;
-        String valueOfLogoutToken = redisTemplate.opsForValue().get("token_id:"+tokenId);
-        return valueOfLogoutToken != null;
+        try{
+            String tokenId = JWTParser.parse(token).getJWTClaimsSet().getJWTID();
+            if(tokenId == null) return false;
+            String valueOfLogoutToken = redisService.getValue("token_id:"+tokenId);
+            return valueOfLogoutToken != null;
+        } catch (ParseException e) {
+            return false;
+        }
     }
 
-    public boolean deActiveToken(Token token){
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        JwtAuthenticationToken authentication =
-                (JwtAuthenticationToken) securityContext.getAuthentication();
-        Jwt decodeToken = authentication.getToken();
+    public boolean deActiveToken(Token token) throws ParseException {
+        String jwtid = JWTParser.parse(token.getValue()).getJWTClaimsSet().getJWTID();
         try{
-            redisTemplate.opsForValue()
-                    .set("token_id:"+decodeToken.getId(),
-                            Objects.requireNonNull(decodeToken.getExpiresAt()).toString(),
+            redisService
+                    .putValue("token_id:"+jwtid,
+                            "true",
                             Duration.ofMillis(token.getLifeTime()));
             return true;
         }
@@ -165,5 +166,4 @@ public class TokenService implements InitializingBean {
             return false;
         }
     }
-
 }

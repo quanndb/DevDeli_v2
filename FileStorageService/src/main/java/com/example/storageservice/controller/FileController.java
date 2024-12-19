@@ -1,12 +1,16 @@
 package com.example.storageservice.controller;
 
+import com.devdeli.common.dto.request.FileActionPageRequest;
 import com.devdeli.common.dto.response.PageResponse;
 import com.example.storageservice.DTO.ApiResponse;
 import com.devdeli.common.dto.request.FilePageRequest;
 import com.devdeli.common.dto.response.FileResponse;
+import com.example.storageservice.entity.FileAction;
+import com.example.storageservice.service.FileActionService;
 import com.example.storageservice.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -23,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FileController {
     private final FileStorageService fileStorageService;
+    private final FileActionService fileActionService;
 
 //    public
     @PostMapping("/public/files/upload")
@@ -54,6 +59,7 @@ public class FileController {
     }
 
     @DeleteMapping("/public/files/{fileId}")
+    @PreAuthorize("hasPermission(#fileId, 'files.delete')")
     public ApiResponse<Boolean> deleteFile(@PathVariable String fileId)  {
         return ApiResponse.<Boolean>builder()
                 .code(200)
@@ -63,6 +69,7 @@ public class FileController {
 
 //    private
     @PostMapping("/files/upload")
+    @PreAuthorize("hasPermission(null, 'files.create')")
     public ApiResponse<List<FileResponse>> uploadPrivateFiles(@RequestParam("files") List<MultipartFile> files,
                                              @RequestParam("ownerId") String ownerId) throws IOException {
         List<FileResponse> result = fileStorageService.storeFiles(ownerId, false, files);
@@ -74,6 +81,7 @@ public class FileController {
     }
 
     @GetMapping("/files/{fileId}")
+    @PreAuthorize("hasPermission(#fileId, 'files.read')")
     public ResponseEntity<byte[]> getFilePrivate(@PathVariable String fileId,
                                             @RequestParam(required = false) Integer width,
                                             @RequestParam(required = false) Integer height,
@@ -82,6 +90,7 @@ public class FileController {
     }
 
     @GetMapping("/files/{fileId}/info")
+    @PreAuthorize("hasPermission(#fileId, 'files.read')")
     public ApiResponse<FileResponse> getPrivateFileInfo(@PathVariable String fileId)  {
         return ApiResponse.<FileResponse>builder()
                 .code(200)
@@ -90,6 +99,7 @@ public class FileController {
     }
 
     @DeleteMapping("/files/{fileId}")
+    @PreAuthorize("hasPermission(#fileId, 'files.delete')")
     public ApiResponse<Boolean> deletePrivateFile(@PathVariable String fileId)  {
         return ApiResponse.<Boolean>builder()
                 .code(200)
@@ -98,10 +108,20 @@ public class FileController {
     }
 
     @GetMapping("/files")
+    @PreAuthorize("hasPermission(null, 'files.read')")
     public ApiResponse<PageResponse<FileResponse>> getFile(@ModelAttribute FilePageRequest request) {
         return ApiResponse.<PageResponse<FileResponse>>builder()
                 .code(200)
                 .result(fileStorageService.getFiles(request))
+                .build();
+    }
+
+    @GetMapping("/files/histories")
+    @PreAuthorize("hasPermission(null, 'files.read')")
+    public ApiResponse<PageResponse<FileAction>> getFileActionHistory(@ModelAttribute FileActionPageRequest request) {
+        return ApiResponse.<PageResponse<FileAction>>builder()
+                .code(200)
+                .result(fileActionService.getFiles(request))
                 .build();
     }
 }

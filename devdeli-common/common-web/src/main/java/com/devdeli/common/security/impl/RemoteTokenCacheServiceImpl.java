@@ -5,13 +5,10 @@ import com.devdeli.common.dto.request.LogoutRequest;
 import com.devdeli.common.service.TokenCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Primary;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-@Primary
 @RequiredArgsConstructor
 public class RemoteTokenCacheServiceImpl implements TokenCacheService {
 
@@ -34,6 +31,6 @@ public class RemoteTokenCacheServiceImpl implements TokenCacheService {
 
     @Override
     public boolean isExisted(String token) {
-        return iamClient.introspect("Bearer "+token).getResult();
+        return iamClient.introspect("Bearer "+token).getCode() != 200;
     }
 }

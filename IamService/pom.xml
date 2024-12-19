@@ -138,17 +138,6 @@
 				<scope>runtime</scope>
 			</dependency>
 
-			<!-- Redis -->
-			<dependency>
-				<groupId>org.springframework.data</groupId>
-				<artifactId>spring-data-redis</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>io.lettuce</groupId>
-				<artifactId>lettuce-core</artifactId>
-				<version>6.3.2.RELEASE</version>
-			</dependency>
-
 			<!-- Cloudinary -->
 			<dependency>
 				<groupId>com.cloudinary</groupId>

@@ -6,7 +6,6 @@ import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.CreateAccountRequest;
 import com.example.identityService.DTO.request.LoginRequest;
 import com.example.identityService.DTO.request.RegisterRequest;
-import com.example.identityService.DTO.response.KeyCloakClientCredentialsResponse;
 import com.example.identityService.DTO.response.LoginResponse;
 import com.example.identityService.config.KeycloakProvider;
 import com.example.identityService.entity.Account;
@@ -131,6 +130,8 @@ public class KeycloakService extends AbstractAuthService{
 
     @Override
     public Object getNewToken(String refreshToken) {
+        if(!tokenService.verifyToken(refreshToken)) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+
         String body = String.format("grant_type=refresh_token&client_id=%s&client_secret=%s&refresh_token=%s",
                 CLIENT_ID, CLIENT_SECRET, refreshToken);
 

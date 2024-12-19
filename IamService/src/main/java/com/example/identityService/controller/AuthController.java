@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 @RestController
 @RequiredArgsConstructor
@@ -63,7 +64,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ApiResponse<Boolean> logout(HttpServletRequest requestHeader, @RequestBody @Valid LogoutRequest requestBody){
+    public ApiResponse<Boolean> logout(HttpServletRequest requestHeader, @RequestBody @Valid LogoutRequest requestBody) throws ParseException {
         String accessToken = requestHeader.getHeader("Authorization").substring(7);
         String refreshToken = requestBody.getRefreshToken();
         boolean result = authService.logout(accessToken, refreshToken);
@@ -73,13 +74,13 @@ public class AuthController {
                 .build();
     }
 
-    @PostMapping("/introspect")
-    public ApiResponse<Boolean> introspect(HttpServletRequest requestHeader, @RequestBody @Valid LogoutRequest requestBody){
+    @GetMapping("/introspect")
+    public ApiResponse<Boolean> introspect(HttpServletRequest requestHeader){
         String token = requestHeader.getHeader("Authorization").substring(7);
         boolean result = authService.introspect(token);
         return ApiResponse.<Boolean>builder()
                 .code(200)
-                .message(ApiResponse.setResponseMessage(result))
+                .result(result)
                 .build();
     }
 
@@ -103,10 +104,10 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<?> getProfile(HttpServletRequest requestHeader){
+    public ApiResponse<?> getProfile(){
         return ApiResponse.builder()
                 .code(200)
-                .result(authService.getProfile(requestHeader.getHeader("Authorization")))
+                .result(authService.getProfile())
                 .build();
     }
 
@@ -130,7 +131,7 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ApiResponse<Boolean> resetPassword(@RequestBody @Valid ResetPasswordRequest passwordRequestDTO, HttpServletRequest request){
+    public ApiResponse<Boolean> resetPassword(@RequestBody @Valid ResetPasswordRequest passwordRequestDTO, HttpServletRequest request) throws ParseException {
         String ip = IpChecker.getClientIpFromRequest(request);
         boolean result = AbstractAuthService.resetPassword(passwordRequestDTO, ip);
         return ApiResponse.<Boolean>builder()

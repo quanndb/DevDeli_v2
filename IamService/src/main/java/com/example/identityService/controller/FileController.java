@@ -28,7 +28,6 @@ public class FileController {
 
 //    public
     @PostMapping("/public/files/upload")
-    @PreAuthorize("hasPermission(null, 'files.create')")
     public ApiResponse<List<FileResponse>> uploadPublicFiles(@RequestParam("files") List<MultipartFile> files) throws IOException {
         List<FileResponse> result = fileService.uploadPublicFiles(files, getCurrentOwner());
         return ApiResponse.<List<FileResponse>>builder()
@@ -39,7 +38,6 @@ public class FileController {
     }
 
     @GetMapping("/public/files/{fileId}")
-    @PreAuthorize("hasPermission(null, 'files.read')")
     public ResponseEntity<byte[]> getFilePublic(@PathVariable String fileId,
                                             @RequestParam(required = false) Integer width,
                                             @RequestParam(required = false) Integer height,
@@ -49,7 +47,6 @@ public class FileController {
     }
 
     @GetMapping("/public/files/{fileId}/info")
-    @PreAuthorize("hasPermission(null, 'files.read')")
     public ApiResponse<FileResponse> getFileInfo(@PathVariable String fileId)  {
         return ApiResponse.<FileResponse>builder()
                 .code(200)
@@ -58,7 +55,7 @@ public class FileController {
     }
 
     @DeleteMapping("/public/files/{fileId}")
-    @PreAuthorize("hasPermission(null, 'files.delete')")
+    @PreAuthorize("hasPermission(#fileId, 'files.delete')")
     public ApiResponse<Boolean> deleteFile(@PathVariable String fileId)  {
         return ApiResponse.<Boolean>builder()
                 .code(200)
@@ -79,7 +76,7 @@ public class FileController {
     }
 
     @GetMapping("/files/{fileId}")
-    @PreAuthorize("hasPermission(null, 'files.read')")
+    @PreAuthorize("hasPermission(#fileId, 'files.read')")
     public ResponseEntity<byte[]> getFilePrivate(@PathVariable String fileId,
                                             @RequestParam(required = false) Integer width,
                                             @RequestParam(required = false) Integer height,
@@ -89,7 +86,7 @@ public class FileController {
     }
 
     @GetMapping("/files/{fileId}/info")
-    @PreAuthorize("hasPermission(null, 'files.read')")
+    @PreAuthorize("hasPermission(#fileId, 'files.read')")
     public ApiResponse<FileResponse> getPrivateFileInfo(@PathVariable String fileId)  {
         return ApiResponse.<FileResponse>builder()
                 .code(200)
@@ -98,7 +95,7 @@ public class FileController {
     }
 
     @DeleteMapping("/files/{fileId}")
-    @PreAuthorize("hasPermission(null, 'files.delete')")
+    @PreAuthorize("hasPermission(#fileId, 'files.delete')")
     public ApiResponse<Boolean> deletePrivateFile(@PathVariable String fileId)  {
         return ApiResponse.<Boolean>builder()
                 .code(200)

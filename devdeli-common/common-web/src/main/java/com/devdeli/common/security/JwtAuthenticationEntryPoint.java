@@ -1,7 +1,7 @@
-package com.example.storageservice.config;
+package com.devdeli.common.security;
 
-import com.example.storageservice.DTO.ApiResponse;
-import com.example.storageservice.exception.ErrorCode;
+import com.devdeli.common.dto.response.ApiResponse;
+import com.devdeli.common.enums.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
