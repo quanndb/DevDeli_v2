@@ -1,32 +1,17 @@
-keycloak:
-  realm: IAM2
-  auth-server-url: http://localhost:8081/auth
-  resource: iam-client
-  jwt:
-    resource-id: iam-client
-    principal-attribute: principal_username
-  credentials:
-    username: admin
-    password: 1234
-    client-id: iam-client
-    secret: vUAlBnG43sreZsAr7hvdqOz5S9FYz0Il
-    scope: openid
-    grant-type: password
-    auth-server: http://localhost:8081/auth
-
 spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uris:
-            sso: ${JWK_SSO_URL:http://localhost:8081/auth/realms/IAM2/protocol/openid-connect/certs}
-            internal: ${JWK_INTERNAL_URL:http://localhost:2818/api/v1.0.0/certificate/.well-known/jwks.json}
+  application:
+    name: iam
+  config:
+    import: configserver:http://localhost:8888
 
-app:
-  storage:
-    internal-url: http://localhost:2819
-  iam:
-    internal-url: http://localhost:2818
-    client-id: storage-client
-    client-secret: yIuUC9uYOfDIuq1bhkSU5Y3MM7gxSSkx
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    preferIpAddress: true
+
+springdoc:
+  api-docs:
+    path: /iam/v3/api-docs
+

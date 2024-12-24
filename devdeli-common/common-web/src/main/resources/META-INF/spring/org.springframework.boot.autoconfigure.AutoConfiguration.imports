@@ -1,6 +1,5 @@
 com.devdeli.common.config.JwtProperties
 com.devdeli.common.config.ActionLogFilter
-com.devdeli.common.config.CustomLogFilter
 com.devdeli.common.config.PasswordEncoderConfig
 com.devdeli.common.config.RedisConfig
 com.devdeli.common.config.PermissionEvaluatorConfig
