@@ -25,7 +25,6 @@ import org.springframework.security.web.SecurityFilterChain;
 )
 @Configuration
 @RequiredArgsConstructor
-
 public class HttpSecurityConfiguration {
 
     private final ActionLogFilter actionLogFilter;
@@ -46,8 +45,6 @@ public class HttpSecurityConfiguration {
                                 .requestMatchers("/api-docs/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()
                                 .requestMatchers("/swagger-ui/**").permitAll()
-                                .requestMatchers("/iam/**").permitAll()
-                                .requestMatchers("/storage/**").permitAll()
                                 .requestMatchers("/certificate/.well-known/jwks.json").permitAll()
                                 .requestMatchers("/public/**").permitAll()
                                 .requestMatchers("/authenticate/**").permitAll()

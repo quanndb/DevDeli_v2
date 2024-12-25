@@ -1,8 +1,31 @@
+app:
+  version: ${APP_VERSION:1.0.0}
+server:
+  servlet:
+    context-path: /api/v${app.version}/
+  port: 2819
+
 spring:
   application:
     name: storage
   config:
     import: configserver:http://localhost:8888
+  output:
+    ansi:
+      enabled: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+
+openapi:
+  service:
+    package: com.example.storageservice.presentation.rest
+    title: Storage Service API document
+    description: This is an official API document of Storage Service
+    version: ${app.version}
+    server: http://localhost:${server.port}/api/v${app.version}
+    group: service
 
 eureka:
   client:
@@ -11,6 +34,14 @@ eureka:
   instance:
     preferIpAddress: true
 
+logging:
+  file:
+    path: logs/iam/
+    name: logs/iam/application.log
 springdoc:
-  api-docs:
-    path: /storage/v3/api-docs
+  swagger-ui:
+    path: api-docs
+
+file:
+  storage:
+    location: ./uploads

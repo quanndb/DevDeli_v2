@@ -1,0 +1,44 @@
+server:
+  port: 9999
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      routes:
+        - id: iam
+          uri: lb://iam
+          predicates:
+            - Path=/iam/**
+          filters:
+            - StripPrefix=1
+        - id: storage
+          uri: lb://storage
+          predicates:
+            - Path=/storage/**
+          filters:
+            - StripPrefix=1
+      discovery:
+        locator:
+          enabled: true
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - name: IAM Service
+        url: /iam/api/v1.0.0/v3/api-docs
+      - name: Storage Service
+        url: /storage/api/v1.0.0/v3/api-docs
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
