@@ -21,6 +21,7 @@ import com.example.identityService.application.service.auth.DefaultAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -174,6 +175,12 @@ public class AuthController {
         return ApiResponse.<LoginResponse>builder()
                 .code(200)
                 .result(authServiceFactory.getAuthService().loginWithGoogle(code, ip))
+                .build();
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> test(){
+        return ResponseEntity.internalServerError()
                 .build();
     }
 }

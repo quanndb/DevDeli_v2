@@ -8,10 +8,10 @@ import com.example.identityService.application.DTO.request.LoginRequest;
 import com.example.identityService.application.DTO.request.RegisterRequest;
 import com.example.identityService.application.DTO.response.LoginResponse;
 import com.example.identityService.application.config.KeycloakProvider;
-import com.example.identityService.domain.entity.Account;
+import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.application.mapper.AccountMapper;
+import com.example.identityService.infrastructure.persistence.mapper.AccountMapper;
 import com.example.identityService.application.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -95,7 +95,7 @@ public class KeycloakService extends AbstractAuthService{
     }
 
     @Override
-    public boolean performRegisterUserFromGoogle(Account request, String ip) {
+    public boolean performRegisterUserFromGoogle(AccountEntity request, String ip) {
         performRegister(RegisterRequest.builder()
                 .email(request.getEmail())
                 .password(request.getPassword())

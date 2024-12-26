@@ -5,11 +5,11 @@ import com.example.identityService.application.DTO.request.PermissionPageRequest
 import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.application.DTO.response.PermissionResponse;
 import com.example.identityService.application.util.JsonMapper;
-import com.example.identityService.domain.entity.Permission;
+import com.example.identityService.infrastructure.persistence.entity.PermissionEntity;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.application.mapper.PermissionMapper;
-import com.example.identityService.domain.repository.PermissionRepository;
+import com.example.identityService.infrastructure.persistence.mapper.PermissionMapper;
+import com.example.identityService.infrastructure.persistence.repository.PermissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +29,7 @@ public class PermissionService {
                         .ifPresent(_ -> {
                             throw new AppExceptions(ErrorCode.PERMISSION_EXISTED);
                         });
-        permissionRepository.save(Permission.builder()
+        permissionRepository.save(PermissionEntity.builder()
                 .name(request.getName())
                 .code(request.getCode())
                 .build());
@@ -37,7 +37,7 @@ public class PermissionService {
     }
 
     public boolean updatePermission(String roleId, CreatePermissionRequest request){
-        Permission foundPermission = permissionRepository.findById(roleId)
+        PermissionEntity foundPermission = permissionRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
         permissionMapper.updatePermission(foundPermission, request);
         permissionRepository.save(foundPermission);
@@ -45,7 +45,7 @@ public class PermissionService {
     }
 
     public boolean deletePermission(String roleId){
-        Permission foundPermission = permissionRepository.findById(roleId)
+        PermissionEntity foundPermission = permissionRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
         foundPermission.setDeleted(true);
         permissionRepository.save(foundPermission);

@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @FeignClient(
         url = "${app.iam.internal-url}",
         name = "iam",
-        contextId = "common-iam")
+        contextId = "common-iam",
+        fallback = IamClientFallback.class)
 public interface IamClient {
     @GetMapping("/api/v1.0.0/accounts/{email}/authorities")
     ApiResponse<UserAuthority> getUserAuthority(@PathVariable String email);

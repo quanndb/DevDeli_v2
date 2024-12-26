@@ -14,12 +14,12 @@ import com.example.identityService.application.DTO.response.GoogleUserResponse;
 import com.example.identityService.application.DTO.response.LoginResponse;
 import com.example.identityService.application.util.RandomCodeCreator;
 import com.example.identityService.application.util.TimeConverter;
-import com.example.identityService.domain.entity.Account;
-import com.example.identityService.domain.entity.Logs;
+import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
+import com.example.identityService.infrastructure.persistence.entity.LogEntity;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.domain.repository.AccountRepository;
-import com.example.identityService.domain.repository.LoggerRepository;
+import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
+import com.example.identityService.infrastructure.persistence.repository.LoggerRepository;
 import com.example.identityService.application.service.EmailService;
 import com.example.identityService.application.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +67,7 @@ public abstract class AbstractAuthService{
     public abstract boolean performChangePassword(ChangePasswordRequest request, String ip);
     public abstract boolean performRegister(RegisterRequest request);
     public abstract boolean performCreateUser(CreateAccountRequest request);
-    public abstract boolean performRegisterUserFromGoogle(Account request, String ip);
+    public abstract boolean performRegisterUserFromGoogle(AccountEntity request, String ip);
 
     public AbstractAuthService() {
         children.add(this);
@@ -75,11 +75,11 @@ public abstract class AbstractAuthService{
 
     // login
     public LoginResponse login(LoginRequest request){
-        Account foundAccount = accountRepository.findByEmail(request.getEmail())
+        AccountEntity foundAccount = accountRepository.findByEmail(request.getEmail())
                 .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         boolean result = isValidUserStatus(foundAccount);
         if(result){
-            Account account = accountRepository
+            AccountEntity account = accountRepository
                     .findByEmail(request.getEmail()).orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
             boolean success = passwordEncoder.matches(request.getPassword(), account.getPassword());
             if(!success){
@@ -98,7 +98,7 @@ public abstract class AbstractAuthService{
             if(isNewIp){
                 sendConfirmValidIp(account.getEmail(), request.getIp());
             }
-            loggerRepository.save(Logs.builder()
+            loggerRepository.save(LogEntity.builder()
                     .actionName("LOGIN")
                     .email(account.getEmail())
                     .ip(request.getIp())
@@ -116,7 +116,7 @@ public abstract class AbstractAuthService{
         return accountRepository.findByEmail(userResponse.getEmail())
                 .map(account -> performLoginWithGoogle(account.getEmail(), account.getPassword(), ip))
                 .orElseGet(() -> {
-                    Account newAccount = createAccountPattern(userResponse);
+                    AccountEntity newAccount = createAccountPattern(userResponse);
                     registerUserFromGoogle(newAccount, ip);
                     return performLoginWithGoogle(newAccount.getEmail(), newAccount.getPassword(), ip);
                 });
@@ -151,7 +151,7 @@ public abstract class AbstractAuthService{
         return true;
     }
 
-    public static boolean registerUserFromGoogle(Account request, String ip){
+    public static boolean registerUserFromGoogle(AccountEntity request, String ip){
         for (AbstractAuthService child : children) {
             child.performRegisterUserFromGoogle(request, ip);
         }
@@ -159,7 +159,7 @@ public abstract class AbstractAuthService{
     }
 
     // utilities
-    public static boolean isValidUserStatus(Account account){
+    public static boolean isValidUserStatus(AccountEntity account){
         if(!account.isVerified()) throw new AppExceptions(ErrorCode.NOT_VERIFY_ACCOUNT);
         if(!account.isEnable()) throw new AppExceptions(ErrorCode.ACCOUNT_LOCKED);
         if(account.isDeleted()) throw new AppExceptions(ErrorCode.ACCOUNT_DELETED);
@@ -191,8 +191,8 @@ public abstract class AbstractAuthService{
                         ,List.of(email)));
     }
 
-    private Account createAccountPattern(GoogleUserResponse userResponse) {
-        return Account.builder()
+    private AccountEntity createAccountPattern(GoogleUserResponse userResponse) {
+        return AccountEntity.builder()
                 .email(userResponse.getEmail())
                 .password(passwordEncoder.encode(RandomCodeCreator.generateCode() + ""))
                 .fullname(userResponse.getName())

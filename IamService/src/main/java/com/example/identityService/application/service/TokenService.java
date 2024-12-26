@@ -3,7 +3,7 @@ package com.example.identityService.application.service;
 import com.devdeli.common.service.RedisService;
 import com.example.identityService.application.util.TimeConverter;
 import com.example.identityService.application.config.AuthenticationProperties;
-import com.example.identityService.domain.entity.Account;
+import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.example.identityService.application.DTO.Token;
 
 import com.nimbusds.jose.JWSAlgorithm;
@@ -70,7 +70,7 @@ public class TokenService implements InitializingBean {
         return otherTokenFactory(email, EMAIL_TOKEN_LIFE_TIME, ip);
     }
 
-    public String accessTokenFactory(Account account) {
+    public String accessTokenFactory(AccountEntity account) {
 
         String tokenId = UUID.randomUUID().toString();
 

@@ -9,11 +9,11 @@ import com.example.identityService.application.DTO.request.UserPageRequest;
 import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.application.DTO.response.UserResponse;
 import com.example.identityService.application.util.ExcelHelper;
-import com.example.identityService.domain.entity.Account;
+import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.application.mapper.AccountMapper;
-import com.example.identityService.domain.repository.AccountRepository;
+import com.example.identityService.infrastructure.persistence.mapper.AccountMapper;
+import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
 import com.example.identityService.application.service.auth.AbstractAuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
@@ -49,7 +49,7 @@ public class AccountService {
     private final FileService remoteFileService;
 
     public UserResponse getUserinfo(String accountId){
-        Account foundAccount = accountRepository.findById(accountId)
+        AccountEntity foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         List<String> roles = accountRoleService.getAllUserRole(foundAccount.getId());
         UserResponse response = accountMapper.toUserResponse(foundAccount);
@@ -58,7 +58,7 @@ public class AccountService {
     }
 
     public boolean setUserEnable(String accountId, boolean enable){
-        Account foundAccount = accountRepository.findById(accountId)
+        AccountEntity foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         foundAccount.setEnable(enable);
 
@@ -67,7 +67,7 @@ public class AccountService {
     }
 
     public boolean deleteUser(String accountId) {
-        Account foundAccount = accountRepository.findById(accountId)
+        AccountEntity foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         foundAccount.setDeleted(true);
 

@@ -2,13 +2,13 @@ package com.example.identityService.application.service;
 
 import com.example.identityService.application.DTO.PermissionScope;
 import com.example.identityService.application.DTO.request.DetailsAssignPermissionRequest;
-import com.example.identityService.domain.entity.Permission;
-import com.example.identityService.domain.entity.RolePermission;
+import com.example.identityService.infrastructure.persistence.entity.PermissionEntity;
+import com.example.identityService.infrastructure.persistence.entity.RolePermissionEntity;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.domain.repository.PermissionRepository;
-import com.example.identityService.domain.repository.RolePermissionRepository;
-import com.example.identityService.domain.repository.RoleRepository;
+import com.example.identityService.infrastructure.persistence.repository.PermissionRepository;
+import com.example.identityService.infrastructure.persistence.repository.RolePermissionRepository;
+import com.example.identityService.infrastructure.persistence.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +29,7 @@ public class RolePermissionService {
 
         Map<String, List<PermissionScope>> permissions = new HashMap<>();
 
-        List<Permission> foundPermissions = permissionRepository.findAllByCodeIgnoreCaseIn(
+        List<PermissionEntity> foundPermissions = permissionRepository.findAllByCodeIgnoreCaseIn(
                 requests.stream()
                         .map(DetailsAssignPermissionRequest::getPermissionCode)
                         .toList()
@@ -41,9 +41,9 @@ public class RolePermissionService {
             }
         }));
 
-        List<RolePermission> existingRolePermissions = rolePermissionRepository.findAllByRoleIdAndDeletedIsFalse(roleId);
+        List<RolePermissionEntity> existingRolePermissions = rolePermissionRepository.findAllByRoleIdAndDeletedIsFalse(roleId);
 
-        List<RolePermission> saveRolePermissions = new ArrayList<>();
+        List<RolePermissionEntity> saveRolePermissions = new ArrayList<>();
 
         permissions.forEach((permissionCode, scopes) -> {
             scopes.forEach(scope -> {
@@ -53,7 +53,7 @@ public class RolePermissionService {
 
                 if (!alreadyExists) {
                     // Create new RolePermission entity
-                    saveRolePermissions.add(RolePermission.builder()
+                    saveRolePermissions.add(RolePermissionEntity.builder()
                             .roleId(roleId)
                             .permissionCode(permissionCode.toUpperCase())
                             .scope(scope)
@@ -70,8 +70,8 @@ public class RolePermissionService {
     public boolean unAssignPermission(String roleId, List<DetailsAssignPermissionRequest> requests) {
         roleRepository.findById(roleId).orElseThrow(() -> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
 
-        List<RolePermission> existingRolePermissions = rolePermissionRepository.findAllByRoleIdAndDeletedIsFalse(roleId);
-        List<RolePermission> deleteRolePermissions = new ArrayList<>();
+        List<RolePermissionEntity> existingRolePermissions = rolePermissionRepository.findAllByRoleIdAndDeletedIsFalse(roleId);
+        List<RolePermissionEntity> deleteRolePermissions = new ArrayList<>();
 
         for (DetailsAssignPermissionRequest request : requests) {
             String permissionCode = request.getPermissionCode().toUpperCase();

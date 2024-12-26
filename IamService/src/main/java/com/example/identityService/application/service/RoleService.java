@@ -4,12 +4,12 @@ import com.example.identityService.application.DTO.request.CreateRoleRequest;
 import com.example.identityService.application.DTO.request.RolePageRequest;
 import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.application.DTO.response.RoleResponse;
-import com.example.identityService.domain.entity.Role;
+import com.example.identityService.infrastructure.persistence.entity.RoleEntity;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.application.mapper.RoleMapper;
-import com.example.identityService.domain.repository.RolePermissionRepository;
-import com.example.identityService.domain.repository.RoleRepository;
+import com.example.identityService.infrastructure.persistence.mapper.RoleMapper;
+import com.example.identityService.infrastructure.persistence.repository.RolePermissionRepository;
+import com.example.identityService.infrastructure.persistence.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +34,7 @@ public class RoleService {
                         .ifPresent( _ -> {
                             throw new AppExceptions(ErrorCode.ROLE_EXISTED);
                         });
-        roleRepository.save(Role.builder()
+        roleRepository.save(RoleEntity.builder()
                         .name(request.getName())
                         .description(request.getDescription())
                 .build());
@@ -42,7 +42,7 @@ public class RoleService {
     }
 
     public boolean updateRole(String roleId, CreateRoleRequest request){
-        Role foundRole = roleRepository.findById(roleId)
+        RoleEntity foundRole = roleRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
         roleMapper.updateRole(foundRole, request);
         roleRepository.save(foundRole);
@@ -50,7 +50,7 @@ public class RoleService {
     }
 
     public boolean deleteRole(String roleId){
-        Role foundRole = roleRepository.findById(roleId)
+        RoleEntity foundRole = roleRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
         foundRole.setDeleted(true);
         roleRepository.save(foundRole);

@@ -16,14 +16,14 @@ import com.example.identityService.application.DTO.request.UpdateProfileRequest;
 import com.example.identityService.application.DTO.response.LoginResponse;
 import com.example.identityService.application.DTO.response.UserResponse;
 import com.example.identityService.application.util.TimeConverter;
-import com.example.identityService.domain.entity.Account;
-import com.example.identityService.domain.entity.Logs;
+import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
+import com.example.identityService.infrastructure.persistence.entity.LogEntity;
 import com.example.identityService.application.DTO.Token;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.application.mapper.AccountMapper;
-import com.example.identityService.domain.repository.AccountRepository;
-import com.example.identityService.domain.repository.LoggerRepository;
+import com.example.identityService.infrastructure.persistence.mapper.AccountMapper;
+import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
+import com.example.identityService.infrastructure.persistence.repository.LoggerRepository;
 import com.example.identityService.application.service.AccountRoleService;
 import com.example.identityService.application.service.EmailService;
 import com.example.identityService.application.service.TokenService;
@@ -102,7 +102,7 @@ public class DefaultAuthService extends AbstractAuthService {
     }
 
     public LoginResponse loginProcess(String email, String ip){
-        Account foundAccount = accountRepository.findByEmail(email)
+        AccountEntity foundAccount = accountRepository.findByEmail(email)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         String accessToken = tokenService.accessTokenFactory(foundAccount);
         String refreshToken = tokenService.generateRefreshToken(email, ip);
@@ -123,7 +123,7 @@ public class DefaultAuthService extends AbstractAuthService {
                 .ifPresent(_ -> {
                     throw new AppExceptions(ErrorCode.USER_EXISTED);
                 });
-        Account newAccount = accountMapper.toAccount(request);
+        AccountEntity newAccount = accountMapper.toAccount(request);
         newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
         newAccount.setEnable(true);
 
@@ -140,16 +140,16 @@ public class DefaultAuthService extends AbstractAuthService {
                 .ifPresent(_ -> {
                     throw new AppExceptions(ErrorCode.USER_EXISTED);
                 });
-        Account newAccount = accountMapper.toAccount(request);
+        AccountEntity newAccount = accountMapper.toAccount(request);
         newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        Account savedAccount = accountRepository.save(newAccount);
+        AccountEntity savedAccount = accountRepository.save(newAccount);
         return accountRoleService
                 .assignRolesForUser(savedAccount.getId(), request.getRoles());
     }
 
     @Override
-    public boolean performRegisterUserFromGoogle(Account request, String ip) {
+    public boolean performRegisterUserFromGoogle(AccountEntity request, String ip) {
         createAppUserAndAssignRole(request, ip);
         return true;
     }
@@ -165,14 +165,14 @@ public class DefaultAuthService extends AbstractAuthService {
         boolean foundLog = loggerRepository
                 .existsByEmailAndIp(email, ipFromToken);
 
-        Account account = getAccountByEmail(email);
+        AccountEntity account = getAccountByEmail(email);
         if(foundLog){
             account.setVerified(true);
             accountRepository.save(account);
             return true;
         }
 
-        loggerRepository.save(Logs.builder()
+        loggerRepository.save(LogEntity.builder()
                 .actionName("CONFIRM_IP")
                 .email(email)
                 .ip(ip)
@@ -185,12 +185,12 @@ public class DefaultAuthService extends AbstractAuthService {
     // -----------------------------User information start-------------------------------
     // profile
     public UserResponse getProfile() {
-        Account foundUser = getCurrentUser();
+        AccountEntity foundUser = getCurrentUser();
         return accountMapper.toUserResponse(foundUser);
     }
 
     public boolean updateProfile(UpdateProfileRequest request, MultipartFile image) throws IOException {
-        Account foundUser = getCurrentUser();
+        AccountEntity foundUser = getCurrentUser();
         if (request != null) {
             accountMapper.updateAccount(foundUser, request);
             if (request.getCloudImageUrl() != null) {
@@ -226,7 +226,7 @@ public class DefaultAuthService extends AbstractAuthService {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Account foundUser = accountRepository.findByEmail(email)
+        AccountEntity foundUser = accountRepository.findByEmail(email)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         boolean isCorrectPassword = passwordEncoder.matches(request.getCurrentPassword(), foundUser.getPassword());
         if(!isCorrectPassword) throw new AppExceptions(ErrorCode.WRONG_PASSWORD);
@@ -234,7 +234,7 @@ public class DefaultAuthService extends AbstractAuthService {
         foundUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
         accountRepository.save(foundUser);
 
-        loggerRepository.save(Logs.builder()
+        loggerRepository.save(LogEntity.builder()
                 .actionName("CHANGE_PASSWORD")
                 .email(foundUser.getEmail())
                 .ip(ip)
@@ -261,12 +261,12 @@ public class DefaultAuthService extends AbstractAuthService {
 
         tokenService.deActiveToken(new Token(token, TimeConverter.convertToMilliseconds(EMAIL_TOKEN_LIFE_TIME)));
 
-        Account foundAccount = accountRepository.findByEmail(email)
+        AccountEntity foundAccount = accountRepository.findByEmail(email)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         foundAccount.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(foundAccount);
 
-        loggerRepository.save(Logs.builder()
+        loggerRepository.save(LogEntity.builder()
                 .actionName("RESET_PASSWORD")
                 .email(email)
                 .ip(ip)
@@ -302,12 +302,12 @@ public class DefaultAuthService extends AbstractAuthService {
     // -----------------------------User information end-------------------------------
 
     // -----------------------------Utilities start-------------------------------
-    public Account getAccountByEmail(String email){
+    public AccountEntity getAccountByEmail(String email){
         return accountRepository.findByEmail(email)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
     }
 
-    public Account getCurrentUser(){
+    public AccountEntity getCurrentUser(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         if(email.equals("anonymousUser")) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
         return getAccountByEmail(email);
@@ -321,14 +321,14 @@ public class DefaultAuthService extends AbstractAuthService {
         }
 
         String email = tokenService.getTokenDecoded(refreshToken).getSubject();
-        Account foundAccount = getAccountByEmail(email);
+        AccountEntity foundAccount = getAccountByEmail(email);
         return tokenService.accessTokenFactory(foundAccount);
     }
 
 
-    public void createAppUserAndAssignRole(Account account, String ip){
-        Account savedAccount = accountRepository.save(account);
-        loggerRepository.save(Logs.builder()
+    public void createAppUserAndAssignRole(AccountEntity account, String ip){
+        AccountEntity savedAccount = accountRepository.save(account);
+        loggerRepository.save(LogEntity.builder()
                 .actionName("REGISTRATION")
                 .email(savedAccount.getEmail())
                 .ip(ip)

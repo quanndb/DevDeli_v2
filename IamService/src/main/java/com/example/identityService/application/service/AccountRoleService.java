@@ -1,15 +1,15 @@
 package com.example.identityService.application.service;
 
 import com.devdeli.common.UserAuthority;
-import com.example.identityService.domain.entity.Account;
-import com.example.identityService.domain.entity.AccountRole;
-import com.example.identityService.domain.entity.Role;
+import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
+import com.example.identityService.infrastructure.persistence.entity.AccountRoleEntity;
+import com.example.identityService.infrastructure.persistence.entity.RoleEntity;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.domain.repository.AccountRepository;
-import com.example.identityService.domain.repository.AccountRoleRepository;
-import com.example.identityService.domain.repository.RolePermissionRepository;
-import com.example.identityService.domain.repository.RoleRepository;
+import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
+import com.example.identityService.infrastructure.persistence.repository.AccountRoleRepository;
+import com.example.identityService.infrastructure.persistence.repository.RolePermissionRepository;
+import com.example.identityService.infrastructure.persistence.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,15 +28,15 @@ public class AccountRoleService {
     public List<String> getAllUserRole(String accountId) {
         List<String> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
                 .stream()
-                .map(AccountRole::getRoleId)
+                .map(AccountRoleEntity::getRoleId)
                 .toList();
-        return roleRepository.findAllById(foundRoleIds).stream().map(Role::getName).toList();
+        return roleRepository.findAllById(foundRoleIds).stream().map(RoleEntity::getName).toList();
     }
 
-    public List<Role> getAllUserRoleId(String accountId) {
+    public List<RoleEntity> getAllUserRoleId(String accountId) {
         List<String> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
                 .stream()
-                .map(AccountRole::getRoleId)
+                .map(AccountRoleEntity::getRoleId)
                 .toList();
         return roleRepository.findAllById(foundRoleIds);
     }
@@ -45,19 +45,19 @@ public class AccountRoleService {
         accountRepository.findById(accountId).orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         List<String> accountRoleIdList = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
                 .stream()
-                .map(AccountRole::getRoleId)
+                .map(AccountRoleEntity::getRoleId)
                 .toList();
 
         List<String> accountRoleNames = roleRepository.findAllById(accountRoleIdList)
                 .stream()
-                .map(Role::getName)
+                .map(RoleEntity::getName)
                 .toList();
 
-        List<AccountRole> saveAccountRoles = roleRepository.findAllByNameIn(roles.stream()
+        List<AccountRoleEntity> saveAccountRoles = roleRepository.findAllByNameIn(roles.stream()
                         .filter(name -> !accountRoleNames.contains(name))
                         .toList())
                 .stream()
-                .map(item->AccountRole.builder()
+                .map(item-> AccountRoleEntity.builder()
                         .roleId(item.getId())
                         .accountId(accountId)
                         .build())
@@ -70,13 +70,13 @@ public class AccountRoleService {
     public boolean unassignRolesForUser(String accountId, List<String> roles){
         accountRepository.findById(accountId).orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
 
-        List<AccountRole> userRoles = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId);
+        List<AccountRoleEntity> userRoles = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId);
         List<String> deleteRoleList = roleRepository.findAllByNameIn(roles.stream()
                         .toList()).stream()
-                .map(Role::getId)
+                .map(RoleEntity::getId)
                 .toList();
 
-        List<AccountRole> deleteAccountRoleList = userRoles.stream()
+        List<AccountRoleEntity> deleteAccountRoleList = userRoles.stream()
                 .filter(item -> deleteRoleList.contains(item.getRoleId()))
                 .peek(item -> item.setDeleted(true))
                 .toList();
@@ -86,13 +86,13 @@ public class AccountRoleService {
     }
 
     public UserAuthority getAllUserAuthorities(String email) {
-        Account found = accountRepository.findByEmail(email)
+        AccountEntity found = accountRepository.findByEmail(email)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
-        List<Role> roles = getAllUserRoleId(found.getId());
-        boolean isRoot = roles.stream().anyMatch(Role::isRoot);
+        List<RoleEntity> roles = getAllUserRoleId(found.getId());
+        boolean isRoot = roles.stream().anyMatch(RoleEntity::isRoot);
         if(isRoot) return new UserAuthority(email, true, List.of());
         List<String> authorities = rolePermissionRepository.getAllAuthoritiesInListRole(roles.stream()
-                        .map(Role::getId)
+                        .map(RoleEntity::getId)
                 .collect(Collectors.toList()));
         return new UserAuthority(email, false, authorities);
     }
