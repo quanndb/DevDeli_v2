@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/permissions")
 @RequiredArgsConstructor
@@ -46,7 +48,7 @@ public class PermissionController {
 
     @PostMapping("/{permissionId}")
     @PreAuthorize("hasPermission(null, 'roles.update')")
-    public ApiResponse<String> updatePermission(@PathVariable String permissionId, @RequestBody @Valid CreatePermissionRequest request){
+    public ApiResponse<String> updatePermission(@PathVariable UUID permissionId, @RequestBody @Valid CreatePermissionRequest request){
         boolean result = permissionService.updatePermission(permissionId, request);
         return ApiResponse.<String>builder()
                 .code(200)
@@ -56,7 +58,7 @@ public class PermissionController {
 
     @DeleteMapping("/{permissionId}")
     @PreAuthorize("hasPermission(null, 'roles.delete')")
-    public ApiResponse<String> deletePermission(@PathVariable String permissionId){
+    public ApiResponse<String> deletePermission(@PathVariable UUID permissionId){
         boolean result = permissionService.deletePermission(permissionId);
         return ApiResponse.<String>builder()
                 .code(200)

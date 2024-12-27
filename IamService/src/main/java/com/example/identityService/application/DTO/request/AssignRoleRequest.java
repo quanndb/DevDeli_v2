@@ -4,9 +4,10 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 public class AssignRoleRequest {
     @NotEmpty(message = "ROLE_NOT_EMPTY")
-    List<String> roles;
+    List<UUID> roles;
 }

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,25 +26,25 @@ public class AccountRoleService {
     private final AccountRepository accountRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
-    public List<String> getAllUserRole(String accountId) {
-        List<String> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
+    public List<String> getAllUserRole(UUID accountId) {
+        List<UUID> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
                 .stream()
                 .map(AccountRoleEntity::getRoleId)
                 .toList();
         return roleRepository.findAllById(foundRoleIds).stream().map(RoleEntity::getName).toList();
     }
 
-    public List<RoleEntity> getAllUserRoleId(String accountId) {
-        List<String> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
+    public List<RoleEntity> getAllUserRoleId(UUID accountId) {
+        List<UUID> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
                 .stream()
                 .map(AccountRoleEntity::getRoleId)
                 .toList();
         return roleRepository.findAllById(foundRoleIds);
     }
 
-    public boolean assignRolesForUser(String accountId, List<String> roles){
+    public boolean assignRolesForUser(UUID accountId, List<UUID> roles){
         accountRepository.findById(accountId).orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
-        List<String> accountRoleIdList = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
+        List<UUID> accountRoleIdList = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
                 .stream()
                 .map(AccountRoleEntity::getRoleId)
                 .toList();
@@ -53,25 +54,26 @@ public class AccountRoleService {
                 .map(RoleEntity::getName)
                 .toList();
 
-        List<AccountRoleEntity> saveAccountRoles = roleRepository.findAllByNameIn(roles.stream()
-                        .filter(name -> !accountRoleNames.contains(name))
-                        .toList())
-                .stream()
-                .map(item-> AccountRoleEntity.builder()
-                        .roleId(item.getId())
-                        .accountId(accountId)
-                        .build())
-                .toList();
+//        List<AccountRoleEntity> saveAccountRoles = roleRepository.findAllByNameInAndDeletedIsFalse(roles.stream()
+//                        .map(UUID::toString)
+//                        .filter(string -> !accountRoleNames.contains(string))
+//                        .toList())
+//                .stream()
+//                .map(item-> AccountRoleEntity.builder()
+//                        .roleId(item.getId())
+//                        .accountId(accountId)
+//                        .build())
+//                .toList();
 
-        accountRoleRepository.saveAll(saveAccountRoles);
+//        accountRoleRepository.saveAll(saveAccountRoles);
         return true;
     }
 
-    public boolean unassignRolesForUser(String accountId, List<String> roles){
+    public boolean unassignRolesForUser(UUID accountId, List<UUID> roles){
         accountRepository.findById(accountId).orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
 
         List<AccountRoleEntity> userRoles = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId);
-        List<String> deleteRoleList = roleRepository.findAllByNameIn(roles.stream()
+        List<UUID> deleteRoleList = roleRepository.findAllByNameInAndDeletedIsFalse(roles.stream()
                         .toList()).stream()
                 .map(RoleEntity::getId)
                 .toList();

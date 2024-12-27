@@ -145,7 +145,7 @@ public class DefaultAuthService extends AbstractAuthService {
 
         AccountEntity savedAccount = accountRepository.save(newAccount);
         return accountRoleService
-                .assignRolesForUser(savedAccount.getId(), request.getRoles());
+                .assignRolesForUser(savedAccount.getId(), request.getRoleIds());
     }
 
     @Override
@@ -333,7 +333,7 @@ public class DefaultAuthService extends AbstractAuthService {
                 .email(savedAccount.getEmail())
                 .ip(ip)
                 .build());
-        accountRoleService.assignRolesForUser(savedAccount.getId(), List.of(EnumRole.USER.getName()));
+//        accountRoleService.assignRolesForUser(savedAccount.getId(), List.of(EnumRole.USER.getName()));
     }
 
     public boolean introspect(String token) {

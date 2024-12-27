@@ -48,7 +48,7 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final FileService remoteFileService;
 
-    public UserResponse getUserinfo(String accountId){
+    public UserResponse getUserinfo(UUID accountId){
         AccountEntity foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         List<String> roles = accountRoleService.getAllUserRole(foundAccount.getId());
@@ -57,7 +57,7 @@ public class AccountService {
         return response;
     }
 
-    public boolean setUserEnable(String accountId, boolean enable){
+    public boolean setUserEnable(UUID accountId, boolean enable){
         AccountEntity foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         foundAccount.setEnable(enable);
@@ -66,7 +66,7 @@ public class AccountService {
         return true;
     }
 
-    public boolean deleteUser(String accountId) {
+    public boolean deleteUser(UUID accountId) {
         AccountEntity foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         foundAccount.setDeleted(true);
@@ -201,7 +201,7 @@ public class AccountService {
                                     .cloudImageId(cloudImageId)
                                     .verified(verified)
                                     .enable(enable)
-                                    .roles(List.of(roles.split(",\\s*")))
+//                                    .rolesIds(List.of(roles.split(",\\s*")))
                             .build());
 
                 } catch (Exception e) {

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/roles")
@@ -40,7 +41,7 @@ public class RoleController {
 
     @GetMapping("{roleId}")
     @PreAuthorize("hasPermission(null, 'roles.read')")
-    public ApiResponse<List<String>> getAllPermissionOfRole(@PathVariable String roleId){
+    public ApiResponse<List<String>> getAllPermissionOfRole(@PathVariable UUID roleId){
         return ApiResponse.<List<String>>builder()
                 .code(200)
                 .result(roleService.getAllRolePermission(roleId))
@@ -59,7 +60,7 @@ public class RoleController {
 
     @PostMapping("/{roleId}")
     @PreAuthorize("hasPermission(null, 'roles.update')")
-    public ApiResponse<String> updateRole(@PathVariable String roleId, @RequestBody @Valid CreateRoleRequest request){
+    public ApiResponse<String> updateRole(@PathVariable UUID roleId, @RequestBody @Valid CreateRoleRequest request){
         boolean result = roleService.updateRole(roleId, request);
         return ApiResponse.<String>builder()
                 .code(200)
@@ -69,7 +70,7 @@ public class RoleController {
 
     @DeleteMapping("/{roleId}")
     @PreAuthorize("hasPermission(null, 'roles.delete')")
-    public ApiResponse<String> deleteRole(@PathVariable String roleId){
+    public ApiResponse<String> deleteRole(@PathVariable UUID roleId){
         boolean result = roleService.deleteRole(roleId);
         return ApiResponse.<String>builder()
                 .code(200)
@@ -79,7 +80,7 @@ public class RoleController {
 
     @PostMapping("/{roleId}/permissions")
     @PreAuthorize("hasPermission(null, 'roles.create')")
-    public ApiResponse<String> assignPermissionsForRole(@PathVariable String roleId,
+    public ApiResponse<String> assignPermissionsForRole(@PathVariable UUID roleId,
                                                        @RequestBody List<DetailsAssignPermissionRequest> assignPermissionRequest){
 
         boolean result = rolePermissionService.assignPermission(roleId, assignPermissionRequest);
@@ -91,7 +92,7 @@ public class RoleController {
 
     @DeleteMapping("/{roleId}/permissions")
     @PreAuthorize("hasPermission(null, 'roles.delete')")
-    public ApiResponse<String> unassignPermissionsForRole(@PathVariable String roleId,
+    public ApiResponse<String> unassignPermissionsForRole(@PathVariable UUID roleId,
                                                        @RequestBody List<DetailsAssignPermissionRequest> assignPermissionRequest){
 
         boolean result = rolePermissionService.unAssignPermission(roleId, assignPermissionRequest);

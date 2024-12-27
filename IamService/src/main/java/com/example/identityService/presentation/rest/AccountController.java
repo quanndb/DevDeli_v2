@@ -10,7 +10,7 @@ import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.application.DTO.response.UserResponse;
 import com.example.identityService.application.service.AccountRoleService;
 import com.example.identityService.application.service.AccountService;
-import com.example.identityService.application.service.auth.AbstractAuthService;
+import com.example.identityService.application.service.UserCommandService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -33,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 
 @RestController
@@ -42,6 +43,7 @@ public class AccountController {
 
     private final AccountService accountService;
     private final AccountRoleService accountRoleService;
+    private final UserCommandService userCommandService;
 
     @GetMapping
     @PreAuthorize("hasPermission(null, 'accounts.read')")
@@ -56,7 +58,7 @@ public class AccountController {
     @PostMapping
     @PreAuthorize("hasPermission(null, 'accounts.create')")
     public ApiResponse<?> createAccount(@RequestBody @Valid CreateAccountRequest request){
-        boolean result = AbstractAuthService.createUser(request);
+        boolean result = userCommandService.createUser(request);
         return ApiResponse.builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
@@ -65,7 +67,7 @@ public class AccountController {
 
     @GetMapping("/{accountId}")
     @PreAuthorize("hasPermission(null, 'accounts.read')")
-    public ApiResponse<?> getAccount(@PathVariable String accountId){
+    public ApiResponse<?> getAccount(@PathVariable UUID accountId){
         return ApiResponse.builder()
                 .code(200)
                 .result(accountService.getUserinfo(accountId))
@@ -74,7 +76,7 @@ public class AccountController {
 
     @DeleteMapping("/{accountId}")
     @PreAuthorize("hasPermission(null, 'accounts.delete')")
-    public ApiResponse<?> deleteAccount(@PathVariable String accountId){
+    public ApiResponse<?> deleteAccount(@PathVariable UUID accountId){
         boolean result = accountService.deleteUser(accountId);
         return ApiResponse.builder()
                 .code(200)
@@ -84,7 +86,7 @@ public class AccountController {
 
     @PostMapping("/{accountId}")
     @PreAuthorize("hasPermission(null, 'accounts.update')")
-    public ApiResponse<?> setEnableAccount(@RequestBody @Valid SetUserEnableRequest request, @PathVariable String accountId){
+    public ApiResponse<?> setEnableAccount(@RequestBody @Valid SetUserEnableRequest request, @PathVariable UUID accountId){
         boolean result = accountService.setUserEnable(accountId, request.isEnable());
         return ApiResponse.builder()
                 .code(200)
@@ -117,7 +119,7 @@ public class AccountController {
 //    roles
     @PostMapping("/{accountId}/roles")
     @PreAuthorize("hasPermission(null, 'roles.create')")
-    public ApiResponse<?> assignRolesForUser(@RequestBody @Valid AssignRoleRequest request, @PathVariable String accountId){
+    public ApiResponse<?> assignRolesForUser(@RequestBody @Valid AssignRoleRequest request, @PathVariable UUID accountId){
         boolean result = accountRoleService.assignRolesForUser(accountId, request.getRoles());
         return ApiResponse.builder()
                 .code(200)
@@ -127,7 +129,7 @@ public class AccountController {
 
     @DeleteMapping("/{accountId}/roles")
     @PreAuthorize("hasPermission(null, 'role.delete')")
-    public ApiResponse<?> unassignRolesForUser(@RequestBody @Valid AssignRoleRequest request, @PathVariable String accountId){
+    public ApiResponse<?> unassignRolesForUser(@RequestBody @Valid AssignRoleRequest request, @PathVariable UUID accountId){
         boolean result = accountRoleService.unassignRolesForUser(accountId, request.getRoles());
         return ApiResponse.builder()
                 .code(200)

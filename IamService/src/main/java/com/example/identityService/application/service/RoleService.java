@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class RoleService {
     private final RoleMapper roleMapper;
     private final RolePermissionRepository rolePermissionRepository;
 
-    public List<String> getAllRolePermission(String roleId){
+    public List<String> getAllRolePermission(UUID roleId){
         return rolePermissionRepository.findAllByRoleIdAndDeletedIsFalse(roleId)
                 .stream()
                 .map(item -> item.getPermissionCode().toLowerCase() + "." + item.getScope().toString().toLowerCase())
@@ -30,7 +31,7 @@ public class RoleService {
     }
 
     public boolean createRole(CreateRoleRequest request){
-        roleRepository.findByNameIgnoreCase(request.getName())
+        roleRepository.findByNameIgnoreCaseAndDeletedIsFalse(request.getName())
                         .ifPresent( _ -> {
                             throw new AppExceptions(ErrorCode.ROLE_EXISTED);
                         });
@@ -41,7 +42,7 @@ public class RoleService {
         return true;
     }
 
-    public boolean updateRole(String roleId, CreateRoleRequest request){
+    public boolean updateRole(UUID roleId, CreateRoleRequest request){
         RoleEntity foundRole = roleRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
         roleMapper.updateRole(foundRole, request);
@@ -49,7 +50,7 @@ public class RoleService {
         return true;
     }
 
-    public boolean deleteRole(String roleId){
+    public boolean deleteRole(UUID roleId){
         RoleEntity foundRole = roleRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
         foundRole.setDeleted(true);

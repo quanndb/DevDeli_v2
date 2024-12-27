@@ -13,6 +13,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Entity
 @Getter
 @Setter
@@ -22,8 +24,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PermissionEntity extends Auditable {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
     @Column(nullable = false)
     private String name;
     @Column(nullable = false)

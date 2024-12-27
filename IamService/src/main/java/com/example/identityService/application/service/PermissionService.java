@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @Service
@@ -36,7 +37,7 @@ public class PermissionService {
         return true;
     }
 
-    public boolean updatePermission(String roleId, CreatePermissionRequest request){
+    public boolean updatePermission(UUID roleId, CreatePermissionRequest request){
         PermissionEntity foundPermission = permissionRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
         permissionMapper.updatePermission(foundPermission, request);
@@ -44,7 +45,7 @@ public class PermissionService {
         return true;
     }
 
-    public boolean deletePermission(String roleId){
+    public boolean deletePermission(UUID roleId){
         PermissionEntity foundPermission = permissionRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
         foundPermission.setDeleted(true);

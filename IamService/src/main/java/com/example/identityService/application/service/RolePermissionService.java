@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +25,7 @@ public class RolePermissionService {
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
-    public boolean assignPermission(String roleId, List<DetailsAssignPermissionRequest> requests){
+    public boolean assignPermission(UUID roleId, List<DetailsAssignPermissionRequest> requests){
         roleRepository.findById(roleId).orElseThrow(() -> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
 
         Map<String, List<PermissionScope>> permissions = new HashMap<>();
@@ -67,7 +68,7 @@ public class RolePermissionService {
     }
 
     // un assign
-    public boolean unAssignPermission(String roleId, List<DetailsAssignPermissionRequest> requests) {
+    public boolean unAssignPermission(UUID roleId, List<DetailsAssignPermissionRequest> requests) {
         roleRepository.findById(roleId).orElseThrow(() -> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
 
         List<RolePermissionEntity> existingRolePermissions = rolePermissionRepository.findAllByRoleIdAndDeletedIsFalse(roleId);

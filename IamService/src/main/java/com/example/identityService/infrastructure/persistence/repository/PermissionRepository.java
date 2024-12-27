@@ -6,9 +6,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface PermissionRepository extends JpaRepository<PermissionEntity, String>, CustomPermissionRepository {
+public interface PermissionRepository extends JpaRepository<PermissionEntity, UUID>, CustomPermissionRepository {
     Optional<PermissionEntity> findByCodeIgnoreCase(String name);
     List<PermissionEntity> findAllByCodeIgnoreCaseIn(List<String> codes);
 }

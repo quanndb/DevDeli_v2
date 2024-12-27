@@ -15,6 +15,7 @@ import lombok.Setter;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -25,8 +26,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class AccountEntity extends Auditable {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
     @Column(unique = true, nullable = false)
     private String email;
     @Column(nullable = false)

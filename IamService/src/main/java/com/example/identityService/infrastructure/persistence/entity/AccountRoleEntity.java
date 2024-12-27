@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.UUID;
+
 @jakarta.persistence.Entity
 @Getter
 @Setter
@@ -21,12 +23,11 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 public class AccountRoleEntity extends Auditable {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
     @Column(nullable = false)
-    private String accountId;
+    private UUID accountId;
     @Column(nullable = false)
-    private String roleId;
+    private UUID roleId;
     @Column(nullable = false)
     private boolean deleted;
 }

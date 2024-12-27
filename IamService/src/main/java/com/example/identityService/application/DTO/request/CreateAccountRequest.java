@@ -10,6 +10,7 @@ import lombok.Getter;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Builder
@@ -22,17 +23,16 @@ public class CreateAccountRequest {
     private String password;
     @NotBlank(message = "FIELD_NOT_BLANK")
     private String fullname;
-    @NotBlank(message = "FIELD_NOT_BLANK")
     private LocalDate dob;
-    @NotBlank(message = "FIELD_NOT_BLANK")
     private Integer yoe;
     private Boolean verified;
     private Boolean enable;
-    @NotEmpty(message = "ROLE_NOT_EMPTY")
-    private List<String> roles;
     private Gender gender;
     private String address;
     private String cloudImageUrl;
     private String cloudImageId;
     private String ip;
+
+    @NotEmpty(message = "ROLE_NOT_EMPTY")
+    private List<UUID> roleIds;
 }
