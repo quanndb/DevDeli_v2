@@ -59,7 +59,8 @@ public class ActionLogFilter extends OncePerRequestFilter {
             List.of("multipart\\/form-data.*", "image\\/.*", "application\\/octet-stream.*");
 
     @Override
-    protected void doFilterInternal(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain filterChain)
+            throws ServletException, IOException {
         Instant start = Instant.now();
         ContentCachingRequestWrapper requestWrapper =
                 new ContentCachingRequestWrapper(servletRequest);
