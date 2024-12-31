@@ -8,11 +8,11 @@ import com.example.identityService.application.DTO.request.LoginRequest;
 import com.example.identityService.application.DTO.request.RegisterRequest;
 import com.example.identityService.application.DTO.response.LoginResponse;
 import com.example.identityService.application.config.KeycloakProvider;
-import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.infrastructure.persistence.mapper.AccountMapper;
 import com.example.identityService.application.service.TokenService;
+import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
+import com.example.identityService.infrastructure.persistence.mapper.AccountMapper;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
@@ -28,7 +28,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class KeycloakService extends AbstractAuthService{
+public class KeycloakService extends AbstractAuthService {
 
     @Value("${keycloak.auth-server-url}")
     private String KEYCLOAK_AUTH_URL;
@@ -44,8 +44,7 @@ public class KeycloakService extends AbstractAuthService{
     @Override
     public LoginResponse performLogin(LoginRequest request) {
         keycloakProvider.setKeycloak(request.getEmail(), request.getPassword());
-        AccessTokenResponse response = keycloakProvider.getKeycloak()
-                .tokenManager().getAccessToken();
+        AccessTokenResponse response = keycloakProvider.getKeycloak().tokenManager().getAccessToken();
         return new LoginResponse(response.getToken(), response.getRefreshToken());
     }
 
@@ -54,13 +53,10 @@ public class KeycloakService extends AbstractAuthService{
         String body = String.format("client_id=%s&client_secret=%s&grant_type=%s",
                 request.getClientId(), request.getClientSecret(), "client_credentials");
 
-        return WebClient.create(KEYCLOAK_AUTH_URL)
-                .post()
+        return WebClient.create(KEYCLOAK_AUTH_URL).post()
                 .uri("/realms/IAM2/protocol/openid-connect/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(ClientTokenResponse.class).block();
+                .bodyValue(body).retrieve().bodyToMono(ClientTokenResponse.class).block();
     }
 
     @Override
@@ -110,14 +106,11 @@ public class KeycloakService extends AbstractAuthService{
         String body = String.format("client_id=%s&client_secret=%s&refresh_token=%s",
                 CLIENT_ID, CLIENT_SECRET, refreshToken);
 
-        WebClient.create(KEYCLOAK_AUTH_URL)
-                .post()
+        WebClient.create(KEYCLOAK_AUTH_URL).post()
                 .uri("/realms/IAM2/protocol/openid-connect/logout")
                 .header("Content-Type", "application/x-www-form-urlencoded",
-                                    "Authorization", "Bear " + accessToken)
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(Object.class).block();
+                        "Authorization", "Bear " + accessToken)
+                .bodyValue(body).retrieve().bodyToMono(Object.class).block();
         return true;
     }
 
@@ -130,18 +123,15 @@ public class KeycloakService extends AbstractAuthService{
 
     @Override
     public Object getNewToken(String refreshToken) {
-        if(!tokenService.verifyToken(refreshToken)) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+        if (!tokenService.verifyToken(refreshToken)) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
 
         String body = String.format("grant_type=refresh_token&client_id=%s&client_secret=%s&refresh_token=%s",
                 CLIENT_ID, CLIENT_SECRET, refreshToken);
 
-        return WebClient.create(KEYCLOAK_AUTH_URL)
-                .post()
+        return WebClient.create(KEYCLOAK_AUTH_URL).post()
                 .uri("/realms/IAM2/protocol/openid-connect/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(Object.class).block();
+                .bodyValue(body).retrieve().bodyToMono(Object.class).block();
     }
 
     @Override
@@ -150,7 +140,7 @@ public class KeycloakService extends AbstractAuthService{
         return changePassword(email, request.getNewPassword());
     }
 
-    public boolean changePassword(String email, String newPassword){
+    public boolean changePassword(String email, String newPassword) {
         UsersResource usersResource = keycloakProvider.getRealmResourceWithAdminPrivilege().users();
         List<UserRepresentation> users = usersResource.search(email, true);
         if (!users.isEmpty()) {

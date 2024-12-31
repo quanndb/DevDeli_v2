@@ -46,7 +46,7 @@ public class AuthController {
     private final JsonMapper jsonMapper;
 
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest dto, HttpServletRequest request){
+    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest dto, HttpServletRequest request) {
         dto.setIp(IpChecker.getClientIpFromRequest(request));
         var res = authServiceFactory.getAuthService().login(dto);
         return ApiResponse.<LoginResponse>builder()
@@ -76,7 +76,7 @@ public class AuthController {
     }
 
     @GetMapping("/introspect")
-    public ApiResponse<Boolean> introspect(HttpServletRequest requestHeader){
+    public ApiResponse<Boolean> introspect(HttpServletRequest requestHeader) {
         String token = requestHeader.getHeader("Authorization").substring(7);
         boolean result = authService.introspect(token);
         return ApiResponse.<Boolean>builder()
@@ -86,7 +86,7 @@ public class AuthController {
     }
 
     @PostMapping("/registration")
-    public ApiResponse<Boolean> register(@RequestBody @Valid RegisterRequest dto, HttpServletRequest request){
+    public ApiResponse<Boolean> register(@RequestBody @Valid RegisterRequest dto, HttpServletRequest request) {
         dto.setIp(IpChecker.getClientIpFromRequest(request));
         return ApiResponse.<Boolean>builder()
                 .code(200)
@@ -96,7 +96,7 @@ public class AuthController {
     }
 
     @GetMapping("/refresh-token")
-    public ApiResponse<?> getNewAccessToken(@RequestBody @Valid RefreshTokenRequest requestBody){
+    public ApiResponse<?> getNewAccessToken(@RequestBody @Valid RefreshTokenRequest requestBody) {
         String refreshToken = requestBody.getRefreshToken();
         return ApiResponse.builder()
                 .code(200)
@@ -105,7 +105,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<?> getProfile(){
+    public ApiResponse<?> getProfile() {
         return ApiResponse.builder()
                 .code(200)
                 .result(authService.getProfile())
@@ -113,7 +113,7 @@ public class AuthController {
     }
 
     @GetMapping("/verification")
-    public ApiResponse<Object> verifyEmailAndIP(@RequestParam String token, HttpServletRequest request){
+    public ApiResponse<Object> verifyEmailAndIP(@RequestParam String token, HttpServletRequest request) {
         String ip = IpChecker.getClientIpFromRequest(request);
         return ApiResponse.builder()
                 .code(200)
@@ -122,7 +122,7 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ApiResponse<Boolean> fogotPasswordAttemp(@RequestBody @Valid ForgotPasswordRequest dto, HttpServletRequest request){
+    public ApiResponse<Boolean> fogotPasswordAttemp(@RequestBody @Valid ForgotPasswordRequest dto, HttpServletRequest request) {
         String ip = IpChecker.getClientIpFromRequest(request);
         boolean result = authService.forgotPassword(dto.getEmail(), ip);
         return ApiResponse.<Boolean>builder()
@@ -147,7 +147,7 @@ public class AuthController {
             @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
 
         UpdateProfileRequest updateRequest = null;
-        if(userData != null){
+        if (userData != null) {
             updateRequest = jsonMapper
                     .JSONToObject(userData, UpdateProfileRequest.class);
             objectValidator.validateObject(updateRequest);
@@ -160,7 +160,7 @@ public class AuthController {
     }
 
     @PutMapping("/me/change-password")
-    public ApiResponse<Boolean> changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordDTO, HttpServletRequest request){
+    public ApiResponse<Boolean> changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordDTO, HttpServletRequest request) {
         String ip = IpChecker.getClientIpFromRequest(request);
         boolean result = AbstractAuthService.changePassword(changePasswordDTO, ip);
         return ApiResponse.<Boolean>builder()
@@ -170,7 +170,7 @@ public class AuthController {
     }
 
     @GetMapping("/google")
-    public ApiResponse<LoginResponse> loginWithGoogle(@RequestParam String code, HttpServletRequest request){
+    public ApiResponse<LoginResponse> loginWithGoogle(@RequestParam String code, HttpServletRequest request) {
         String ip = IpChecker.getClientIpFromRequest(request);
         return ApiResponse.<LoginResponse>builder()
                 .code(200)
@@ -179,7 +179,7 @@ public class AuthController {
     }
 
     @GetMapping("/test")
-    public ResponseEntity<String> test(){
+    public ResponseEntity<String> test() {
         return ResponseEntity.internalServerError()
                 .build();
     }
