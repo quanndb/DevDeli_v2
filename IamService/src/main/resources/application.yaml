@@ -2,6 +2,11 @@ app:
   version: ${APP_VERSION:1.0.0}
   baseUrl: ${APP_BASE_URL${server.servlet.context-path}:http://localhost:${server.port}${server.servlet.context-path}}
 
+server:
+  port: 2818
+  servlet:
+    context-path: /api/v${app.version}/
+
 openapi:
   service:
     package: com.example.identityService.presentation.rest
@@ -30,10 +35,7 @@ eureka:
       defaultZone: http://localhost:8761/eureka
   instance:
     preferIpAddress: true
-server:
-  port: 2818
-  servlet:
-    context-path: /api/v${app.version}/
+
 springdoc:
   swagger-ui:
     path: /api-docs
