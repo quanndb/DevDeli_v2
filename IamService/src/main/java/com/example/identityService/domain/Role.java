@@ -12,9 +12,10 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PermissionDomain extends AuditableDomain {
+public class Role extends AuditableDomain {
     private String id;
     private String name;
-    private String code;
+    private String description;
     private boolean deleted;
+    private boolean root;
 }

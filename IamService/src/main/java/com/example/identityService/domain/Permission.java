@@ -1,7 +1,6 @@
 package com.example.identityService.domain;
 
 import com.devdeli.common.AuditableDomain;
-import com.example.identityService.application.DTO.PermissionScope;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,10 +12,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RolePermissionDomain extends AuditableDomain {
+public class Permission extends AuditableDomain {
     private String id;
-    private String roleId;
-    private String permissionCode;
-    private PermissionScope scope;
+    private String name;
+    private String code;
     private boolean deleted;
 }

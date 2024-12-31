@@ -11,17 +11,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthServiceFactory {
 
-    private DefaultAuthService defaultAuthService;
     private KeycloakService keycloakAuthService;
-
-    @Autowired
-    public void setDefaultAuthService(@Lazy DefaultAuthService defaultAuthService) {
-        this.defaultAuthService = defaultAuthService;
-    }
+    private DefaultAuthService defaultAuthService;
 
     @Autowired
     public void setKeycloakAuthService(@Lazy KeycloakService keycloakAuthService) {
         this.keycloakAuthService = keycloakAuthService;
+    }
+
+    @Autowired
+    public void setDefaultAuthService(@Lazy DefaultAuthService defaultAuthService) {
+        this.defaultAuthService = defaultAuthService;
     }
 
     @Value("${app.idp}")

@@ -11,8 +11,10 @@ import com.example.identityService.application.config.KeycloakProvider;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
 import com.example.identityService.application.service.TokenService;
+import com.example.identityService.domain.User;
 import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.example.identityService.infrastructure.persistence.mapper.AccountMapper;
+import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
@@ -40,6 +42,7 @@ public class KeycloakService extends AbstractAuthService {
     private final KeycloakProvider keycloakProvider;
     private final AccountMapper accountMapper;
     private final TokenService tokenService;
+    private final AccountRepository accountRepository;
 
     @Override
     public LoginResponse performLogin(LoginRequest request) {
@@ -60,8 +63,8 @@ public class KeycloakService extends AbstractAuthService {
     }
 
     @Override
-    public LoginResponse performLoginWithGoogle(String email, String password, String ip) {
-        return performLogin(new LoginRequest(email, password, ip));
+    public LoginResponse performLoginWithGoogle(String email, String password) {
+        return performLogin(new LoginRequest(email, password));
     }
 
     @Override
@@ -91,12 +94,21 @@ public class KeycloakService extends AbstractAuthService {
     }
 
     @Override
-    public boolean performRegisterUserFromGoogle(AccountEntity request, String ip) {
+    public boolean performCreateOrUpdateUser(User request) {
+        try{
+            return performRegister(accountMapper.toRegisterRequest(request));
+        }
+        catch (Exception _){
+            return true;
+        }
+    }
+
+    @Override
+    public boolean performRegisterUserFromGoogle(AccountEntity request) {
         performRegister(RegisterRequest.builder()
                 .email(request.getEmail())
                 .password(request.getPassword())
                 .fullname(request.getFullname())
-                .ip(ip)
                 .build());
         return true;
     }
@@ -115,7 +127,7 @@ public class KeycloakService extends AbstractAuthService {
     }
 
     @Override
-    public boolean performResetPassword(String token, String newPassword, String ip) {
+    public boolean performResetPassword(String token, String newPassword) {
         String email = tokenService.getTokenDecoded(token).getSubject();
 
         return changePassword(email, newPassword);
@@ -135,7 +147,7 @@ public class KeycloakService extends AbstractAuthService {
     }
 
     @Override
-    public boolean performChangePassword(ChangePasswordRequest request, String ip) {
+    public boolean performChangePassword(ChangePasswordRequest request) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return changePassword(email, request.getNewPassword());
     }

@@ -1,9 +1,9 @@
 package com.example.identityService.infrastructure.domainRepository;
 
-import com.example.identityService.domain.UserRoleDomain;
+import com.example.identityService.domain.UserRole;
 import com.example.identityService.domain.repository.UserRoleDomainRepository;
 import com.example.identityService.infrastructure.persistence.entity.AccountRoleEntity;
-import com.example.identityService.infrastructure.persistence.mapper.impl.CustomAccountRoleMapperImpl;
+import com.example.identityService.infrastructure.persistence.mapper.AccountRoleMapper;
 import com.example.identityService.infrastructure.persistence.repository.AccountRoleRepository;
 import com.example.identityService.infrastructure.persistence.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class UserRoleDomainRepositoryImpl implements UserRoleDomainRepository {
 
     private final AccountRoleRepository accountRoleRepository;
     private final RoleRepository roleRepository;
-    private final CustomAccountRoleMapperImpl accountRoleMapper;
+    private final AccountRoleMapper accountRoleMapper;
 
     @Override
     public boolean existsIds(List<UUID> roleIds) {
@@ -27,32 +27,39 @@ public class UserRoleDomainRepositoryImpl implements UserRoleDomainRepository {
     }
 
     @Override
-    public List<UserRoleDomain> getAllByIds(List<UUID> roleIds) {
+    public List<UserRole> getAllByUserId(UUID userId) {
+        List<AccountRoleEntity> accountRoleEntityList = accountRoleRepository
+                .findAllByAccountId(userId);
+        return accountRoleMapper.toUserRoleDomainList(accountRoleEntityList);
+    }
+
+    @Override
+    public List<UserRole> getAllByIds(List<UUID> roleIds) {
         return List.of();
     }
 
     @Override
-    public Optional<UserRoleDomain> findById(UUID uuid) {
+    public Optional<UserRole> findById(UUID uuid) {
         return Optional.empty();
     }
 
     @Override
-    public UserRoleDomain getById(UUID uuid) {
+    public UserRole getById(UUID uuid) {
         return null;
     }
 
     @Override
-    public List<UserRoleDomain> findAllByIds(List<UUID> uuids) {
+    public List<UserRole> findAllByIds(List<UUID> uuids) {
         return List.of();
     }
 
     @Override
-    public boolean save(UserRoleDomain domain) {
+    public boolean save(UserRole domain) {
         return true;
     }
 
     @Override
-    public boolean saveAll(List<UserRoleDomain> domains) {
+    public boolean saveAll(List<UserRole> domains) {
         List<AccountRoleEntity> accountRoleEntityList = accountRoleMapper
                 .toAccountRoleEntityList(domains);
         accountRoleRepository.saveAll(accountRoleEntityList);
@@ -60,7 +67,7 @@ public class UserRoleDomainRepositoryImpl implements UserRoleDomainRepository {
     }
 
     @Override
-    public boolean delete(UserRoleDomain domain) {
+    public boolean delete(UserRole domain) {
         return true;
     }
 

@@ -6,27 +6,20 @@ import com.devdeli.common.dto.response.FileResponse;
 import com.devdeli.common.service.FileService;
 import com.devdeli.common.service.RedisService;
 import com.example.identityService.application.DTO.EmailEnum;
-import com.example.identityService.application.DTO.EnumRole;
-import com.example.identityService.application.DTO.request.ChangePasswordRequest;
-import com.example.identityService.application.DTO.request.CreateAccountRequest;
-import com.example.identityService.application.DTO.request.EmailRequest;
-import com.example.identityService.application.DTO.request.LoginRequest;
-import com.example.identityService.application.DTO.request.RegisterRequest;
-import com.example.identityService.application.DTO.request.UpdateProfileRequest;
+import com.example.identityService.application.DTO.Token;
+import com.example.identityService.application.DTO.request.*;
 import com.example.identityService.application.DTO.response.LoginResponse;
 import com.example.identityService.application.DTO.response.UserResponse;
-import com.example.identityService.application.util.TimeConverter;
-import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
-import com.example.identityService.infrastructure.persistence.entity.LogEntity;
-import com.example.identityService.application.DTO.Token;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
-import com.example.identityService.infrastructure.persistence.mapper.AccountMapper;
-import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
-import com.example.identityService.infrastructure.persistence.repository.LoggerRepository;
 import com.example.identityService.application.service.AccountRoleService;
 import com.example.identityService.application.service.EmailService;
 import com.example.identityService.application.service.TokenService;
+import com.example.identityService.application.util.TimeConverter;
+import com.example.identityService.domain.User;
+import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
+import com.example.identityService.infrastructure.persistence.mapper.AccountMapper;
+import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,7 +59,6 @@ public class DefaultAuthService extends AbstractAuthService {
     private final TokenService tokenService;
 
     private final EmailService emailService;
-    private final LoggerRepository loggerRepository;
     private final FileService fileService;
     private final RedisService redisService;
 
@@ -79,17 +71,17 @@ public class DefaultAuthService extends AbstractAuthService {
     // -----------------------------Login logout start-------------------------------
     @Override
     public LoginResponse performLogin(LoginRequest request){
-       return loginProcess(request.getEmail(), request.getIp());
+       return loginProcess(request.getEmail());
     }
 
     @Override
     public ClientTokenResponse performGetClientToken(ClientTokenRequest request) {
-        return new ClientTokenResponse(tokenService.generateTempEmailToken(request.getClientId(),""));
+        return new ClientTokenResponse(tokenService.generateTempEmailToken(request.getClientId()));
     }
 
     @Override
-    public LoginResponse performLoginWithGoogle(String email, String password, String ip){
-        return loginProcess(email, ip);
+    public LoginResponse performLoginWithGoogle(String email, String password){
+        return loginProcess(email);
     }
 
     @Override
@@ -101,11 +93,11 @@ public class DefaultAuthService extends AbstractAuthService {
         return  isDisabledAccessToken && isDisabledRefreshToken;
     }
 
-    public LoginResponse loginProcess(String email, String ip){
+    public LoginResponse loginProcess(String email){
         AccountEntity foundAccount = accountRepository.findByEmail(email)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         String accessToken = tokenService.accessTokenFactory(foundAccount);
-        String refreshToken = tokenService.generateRefreshToken(email, ip);
+        String refreshToken = tokenService.generateRefreshToken(email);
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -127,9 +119,9 @@ public class DefaultAuthService extends AbstractAuthService {
         newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
         newAccount.setEnable(true);
 
-        createAppUserAndAssignRole(newAccount, request.getIp());
+        createAppUserAndAssignRole(newAccount);
 
-        sendVerifyEmail(newAccount.getEmail(), request.getIp());
+        sendVerifyEmail(newAccount.getEmail());
         return true;
     }
 
@@ -149,36 +141,36 @@ public class DefaultAuthService extends AbstractAuthService {
     }
 
     @Override
-    public boolean performRegisterUserFromGoogle(AccountEntity request, String ip) {
-        createAppUserAndAssignRole(request, ip);
+    public boolean performCreateOrUpdateUser(User request) {
+        AccountEntity user = accountMapper.toAccount(request);
+        AccountEntity existedUser = accountRepository.findById(request.getId())
+                .orElseGet(AccountEntity::new);
+        if (!passwordEncoder.matches(request.getPassword(), existedUser.getPassword()))
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        accountRepository.save(user);
         return true;
     }
 
-    public Object verifyEmailAndIP(String token, String ip){
+    @Override
+    public boolean performRegisterUserFromGoogle(AccountEntity request) {
+        createAppUserAndAssignRole(request);
+        return true;
+    }
+
+    public Object verifyEmailAndIP(String token){
         Claims claims = tokenService.extractClaims(token);
         if(claims == null) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
         String email = claims.getSubject();
-        String ipFromToken = claims.get("IP").toString();
-        if(!tokenService.verifyToken(token) || !ip.equals(ipFromToken))
+        if(!tokenService.verifyToken(token))
             throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
 
-        boolean foundLog = loggerRepository
-                .existsByEmailAndIp(email, ipFromToken);
-
         AccountEntity account = getAccountByEmail(email);
-        if(foundLog){
+        if(true){
             account.setVerified(true);
             accountRepository.save(account);
             return true;
         }
-
-        loggerRepository.save(LogEntity.builder()
-                .actionName("CONFIRM_IP")
-                .email(email)
-                .ip(ip)
-                .build());
-
-        return loginProcess(account.getEmail(), ip);
+        return loginProcess(account.getEmail());
     }
     // -----------------------------Registration flow end-------------------------------
 
@@ -219,7 +211,7 @@ public class DefaultAuthService extends AbstractAuthService {
 
     // password
     @Override
-    public boolean performChangePassword(ChangePasswordRequest request, String ip) {
+    public boolean performChangePassword(ChangePasswordRequest request) {
         String currentPassword = request.getCurrentPassword();
         String newPassword = request.getNewPassword();
         if(currentPassword.equals(newPassword)) throw new AppExceptions(ErrorCode.PASSWORD_MUST_DIFFERENCE);
@@ -233,23 +225,17 @@ public class DefaultAuthService extends AbstractAuthService {
 
         foundUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
         accountRepository.save(foundUser);
-
-        loggerRepository.save(LogEntity.builder()
-                .actionName("CHANGE_PASSWORD")
-                .email(foundUser.getEmail())
-                .ip(ip)
-                .build());
         return true;
     }
 
-    public boolean forgotPassword(String email, String ip) {
+    public boolean forgotPassword(String email) {
         getAccountByEmail(email);
-        sendForgotPasswordEmail(email, ip);
+        sendForgotPasswordEmail(email);
         return true;
     }
 
     @Override
-    public boolean performResetPassword(String token, String newPassword, String ip) throws ParseException {
+    public boolean performResetPassword(String token, String newPassword) throws ParseException {
         String email = tokenService.getTokenDecoded(token).getSubject();
 
         String key = String.join("","forgot-password-attempt:", email);
@@ -266,18 +252,12 @@ public class DefaultAuthService extends AbstractAuthService {
         foundAccount.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(foundAccount);
 
-        loggerRepository.save(LogEntity.builder()
-                .actionName("RESET_PASSWORD")
-                .email(email)
-                .ip(ip)
-                .build());
-
         sendResetPasswordSuccess(email);
         return true;
     }
 
-    public void sendForgotPasswordEmail(String email, String ip){
-        String forgotPasswordToken = tokenService.generateTempEmailToken(email, ip);
+    public void sendForgotPasswordEmail(String email){
+        String forgotPasswordToken = tokenService.generateTempEmailToken(email);
 
         String key = String.join("","forgot-password-attempt:", email);
         String attempValueString = redisService.getValue(key);
@@ -326,13 +306,8 @@ public class DefaultAuthService extends AbstractAuthService {
     }
 
 
-    public void createAppUserAndAssignRole(AccountEntity account, String ip){
+    public void createAppUserAndAssignRole(AccountEntity account){
         AccountEntity savedAccount = accountRepository.save(account);
-        loggerRepository.save(LogEntity.builder()
-                .actionName("REGISTRATION")
-                .email(savedAccount.getEmail())
-                .ip(ip)
-                .build());
 //        accountRoleService.assignRolesForUser(savedAccount.getId(), List.of(EnumRole.USER.getName()));
     }
 

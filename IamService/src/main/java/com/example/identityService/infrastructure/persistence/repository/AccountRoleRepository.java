@@ -10,6 +10,6 @@ import java.util.UUID;
 @Repository
 public interface AccountRoleRepository extends JpaRepository<AccountRoleEntity,UUID> {
     List<AccountRoleEntity> findAllByAccountIdAndDeletedIsFalse(UUID accountId);
-
+    List<AccountRoleEntity> findAllByAccountId(UUID accountId);
     boolean existsByAccountIdAndRoleId(UUID accountId, UUID roleId);
 }

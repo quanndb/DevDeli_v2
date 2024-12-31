@@ -30,5 +30,4 @@ public class RegisterRequest {
     private int yoe;
     private Gender gender;
     private String address;
-    private String ip;
 }

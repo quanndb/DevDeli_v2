@@ -2,15 +2,13 @@ package com.example.identityService.presentation.rest;
 
 import com.devdeli.common.UserAuthority;
 import com.example.identityService.application.DTO.ApiResponse;
-import com.example.identityService.application.DTO.request.AssignRoleRequest;
-import com.example.identityService.application.DTO.request.CreateAccountRequest;
-import com.example.identityService.application.DTO.request.SetUserEnableRequest;
-import com.example.identityService.application.DTO.request.UserPageRequest;
+import com.example.identityService.application.DTO.request.*;
 import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.application.DTO.response.UserResponse;
 import com.example.identityService.application.service.AccountRoleService;
 import com.example.identityService.application.service.AccountService;
 import com.example.identityService.application.service.UserCommandService;
+import com.example.identityService.application.service.UserQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -19,14 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -44,14 +35,14 @@ public class AccountController {
     private final AccountService accountService;
     private final AccountRoleService accountRoleService;
     private final UserCommandService userCommandService;
+    private final UserQueryService userQueryService;
 
     @GetMapping
     @PreAuthorize("hasPermission(null, 'accounts.read')")
     public ApiResponse<PageResponse<UserResponse>> getAccounts(@ParameterObject UserPageRequest request) {
-
         return ApiResponse.<PageResponse<UserResponse>>builder()
                 .code(200)
-                .result(accountService.getUsers(request))
+                .result(userQueryService.getUsers(request))
                 .build();
     }
 
@@ -59,6 +50,16 @@ public class AccountController {
     @PreAuthorize("hasPermission(null, 'accounts.create')")
     public ApiResponse<?> createAccount(@RequestBody @Valid CreateAccountRequest request){
         boolean result = userCommandService.createUser(request);
+        return ApiResponse.builder()
+                .code(200)
+                .message(ApiResponse.setResponseMessage(result))
+                .build();
+    }
+
+    @PutMapping("/{accountId}")
+    @PreAuthorize("hasPermission(null, 'accounts.update')")
+    public ApiResponse<?> updateAccount(@RequestBody @Valid UpdateAccountRequest request, @PathVariable UUID accountId){
+        boolean result = userCommandService.updateUser(accountId, request);
         return ApiResponse.builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
@@ -77,7 +78,7 @@ public class AccountController {
     @DeleteMapping("/{accountId}")
     @PreAuthorize("hasPermission(null, 'accounts.delete')")
     public ApiResponse<?> deleteAccount(@PathVariable UUID accountId){
-        boolean result = accountService.deleteUser(accountId);
+        boolean result = userCommandService.deleteUser(accountId);
         return ApiResponse.builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))

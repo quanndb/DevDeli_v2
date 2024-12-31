@@ -2,6 +2,7 @@ package com.example.identityService.presentation.rest;
 
 import com.devdeli.common.dto.request.ClientTokenRequest;
 import com.devdeli.common.dto.response.ClientTokenResponse;
+import com.devdeli.common.support.SecurityUtils;
 import com.example.identityService.application.DTO.ApiResponse;
 import com.example.identityService.application.DTO.request.ChangePasswordRequest;
 import com.example.identityService.application.DTO.request.ForgotPasswordRequest;
@@ -12,6 +13,10 @@ import com.example.identityService.application.DTO.request.RegisterRequest;
 import com.example.identityService.application.DTO.request.ResetPasswordRequest;
 import com.example.identityService.application.DTO.request.UpdateProfileRequest;
 import com.example.identityService.application.DTO.response.LoginResponse;
+import com.example.identityService.application.exception.AppExceptions;
+import com.example.identityService.application.exception.ErrorCode;
+import com.example.identityService.application.service.UserCommandService;
+import com.example.identityService.application.service.UserQueryService;
 import com.example.identityService.application.util.IpChecker;
 import com.example.identityService.application.util.JsonMapper;
 import com.example.identityService.application.util.ObjectValidator;
@@ -21,6 +26,7 @@ import com.example.identityService.application.service.auth.DefaultAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.security.SecurityUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -44,11 +50,12 @@ public class AuthController {
     private final DefaultAuthService authService;
     private final ObjectValidator objectValidator;
     private final JsonMapper jsonMapper;
+    private final UserQueryService userQueryService;
+    private final UserCommandService userCommandService;
 
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest dto, HttpServletRequest request) {
-        dto.setIp(IpChecker.getClientIpFromRequest(request));
-        var res = authServiceFactory.getAuthService().login(dto);
+    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest dto) {
+        var res = userQueryService.login(dto);
         return ApiResponse.<LoginResponse>builder()
                 .code(200)
                 .result(res)
@@ -86,12 +93,11 @@ public class AuthController {
     }
 
     @PostMapping("/registration")
-    public ApiResponse<Boolean> register(@RequestBody @Valid RegisterRequest dto, HttpServletRequest request) {
-        dto.setIp(IpChecker.getClientIpFromRequest(request));
+    public ApiResponse<Boolean> register(@RequestBody @Valid RegisterRequest dto) {
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message("Please check your verification email")
-                .result(AbstractAuthService.register(dto))
+                .result(userCommandService.register(dto))
                 .build();
     }
 
@@ -113,18 +119,16 @@ public class AuthController {
     }
 
     @GetMapping("/verification")
-    public ApiResponse<Object> verifyEmailAndIP(@RequestParam String token, HttpServletRequest request) {
-        String ip = IpChecker.getClientIpFromRequest(request);
+    public ApiResponse<Object> verifyEmailAndIP(@RequestParam String token) {
         return ApiResponse.builder()
                 .code(200)
-                .result(authService.verifyEmailAndIP(token, ip))
+                .result(authService.verifyEmailAndIP(token))
                 .build();
     }
 
     @PostMapping("/forgot-password")
-    public ApiResponse<Boolean> fogotPasswordAttemp(@RequestBody @Valid ForgotPasswordRequest dto, HttpServletRequest request) {
-        String ip = IpChecker.getClientIpFromRequest(request);
-        boolean result = authService.forgotPassword(dto.getEmail(), ip);
+    public ApiResponse<Boolean> fogotPasswordAttemp(@RequestBody @Valid ForgotPasswordRequest dto) {
+        boolean result = authService.forgotPassword(dto.getEmail());
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
@@ -132,9 +136,8 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ApiResponse<Boolean> resetPassword(@RequestBody @Valid ResetPasswordRequest passwordRequestDTO, HttpServletRequest request) throws ParseException {
-        String ip = IpChecker.getClientIpFromRequest(request);
-        boolean result = AbstractAuthService.resetPassword(passwordRequestDTO, ip);
+    public ApiResponse<Boolean> resetPassword(@RequestBody @Valid ResetPasswordRequest passwordRequestDTO) throws ParseException {
+        boolean result = AbstractAuthService.resetPassword(passwordRequestDTO);
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
@@ -142,17 +145,9 @@ public class AuthController {
     }
 
     @PatchMapping("/me")
-    public ApiResponse<Boolean> updateProfile(
-            @RequestParam(value = "userData", required = false) String userData,
-            @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
-
-        UpdateProfileRequest updateRequest = null;
-        if (userData != null) {
-            updateRequest = jsonMapper
-                    .JSONToObject(userData, UpdateProfileRequest.class);
-            objectValidator.validateObject(updateRequest);
-        }
-        boolean result = authService.updateProfile(updateRequest, image);
+    public ApiResponse<Boolean> updateProfile(@RequestBody @Valid UpdateProfileRequest request) throws IOException {
+        boolean result = userCommandService
+                .updateUserInfo(SecurityUtils.getCurrentUser().orElseThrow(()->new AppExceptions(ErrorCode.UNAUTHENTICATED)), request);
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
@@ -160,9 +155,8 @@ public class AuthController {
     }
 
     @PutMapping("/me/change-password")
-    public ApiResponse<Boolean> changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordDTO, HttpServletRequest request) {
-        String ip = IpChecker.getClientIpFromRequest(request);
-        boolean result = AbstractAuthService.changePassword(changePasswordDTO, ip);
+    public ApiResponse<Boolean> changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordDTO) {
+        boolean result = AbstractAuthService.changePassword(changePasswordDTO);
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
@@ -170,11 +164,10 @@ public class AuthController {
     }
 
     @GetMapping("/google")
-    public ApiResponse<LoginResponse> loginWithGoogle(@RequestParam String code, HttpServletRequest request) {
-        String ip = IpChecker.getClientIpFromRequest(request);
+    public ApiResponse<LoginResponse> loginWithGoogle(@RequestParam String code) {
         return ApiResponse.<LoginResponse>builder()
                 .code(200)
-                .result(authServiceFactory.getAuthService().loginWithGoogle(code, ip))
+                .result(authServiceFactory.getAuthService().loginWithGoogle(code))
                 .build();
     }
 

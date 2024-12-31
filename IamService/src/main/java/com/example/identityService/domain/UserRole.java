@@ -15,16 +15,16 @@ import java.util.UUID;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRoleDomain extends AuditableDomain {
+public class UserRole extends AuditableDomain {
     private UUID id;
     private boolean deleted;
-    private UUID userId;
+    private UUID accountId;
     private UUID roleId;
 
-    public UserRoleDomain(CreateUserRoleCommand cmd){
+    public UserRole(CreateUserRoleCommand cmd){
         this.id = UUID.randomUUID();
         this.deleted = false;
         this.roleId = cmd.getRoleId();
-        this.userId = cmd.getAccountId();
+        this.accountId = cmd.getAccountId();
     }
 }

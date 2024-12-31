@@ -15,6 +15,6 @@ public interface RoleRepository extends JpaRepository<RoleEntity, UUID>, CustomR
     Optional<RoleEntity> findByNameIgnoreCaseAndDeletedIsFalse(String roleName);
     List<RoleEntity> findAllByNameInAndDeletedIsFalse(List<UUID> names);
     List<RoleEntity> findAllByIdInAndDeletedIsFalse(List<UUID> ids);
-    @Query(value = "SELECT COUNT(r) = SIZE(:ids) FROM RoleEntity r WHERE r.id IN :ids AND r.deleted = false", nativeQuery = true)
+    @Query("SELECT COUNT(r.id) = :#{#ids.size()} FROM RoleEntity r WHERE r.id IN :ids AND r.deleted = false")
     boolean validIds(@Param("ids") List<UUID> ids);
 }

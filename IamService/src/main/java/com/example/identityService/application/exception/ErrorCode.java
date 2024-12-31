@@ -14,6 +14,7 @@ public enum ErrorCode {
     FORBIDDEN_EXCEPTION(403,"You're unable to do this", HttpStatus.FORBIDDEN),
 
     //
+    EMAIL_EXISTED(402, "This email is already existed", HttpStatus.BAD_REQUEST),
     UNKNOWN_REQUEST(404, "Unknown request has been requested", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL_PASSWORD(405, "Your email or password is invalid", HttpStatus.BAD_REQUEST),
     USER_EXISTED(406, "This email has been created", HttpStatus.BAD_REQUEST),

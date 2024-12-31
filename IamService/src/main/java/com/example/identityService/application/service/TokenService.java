@@ -62,12 +62,12 @@ public class TokenService implements InitializingBean {
     }
 
     // token generators
-    public String generateRefreshToken(String email, String ip){
-        return otherTokenFactory(email, REFRESH_TOKEN_LIFE_TIME, ip);
+    public String generateRefreshToken(String email){
+        return otherTokenFactory(email, REFRESH_TOKEN_LIFE_TIME);
     }
 
-    public String generateTempEmailToken(String email, String ip){
-        return otherTokenFactory(email, EMAIL_TOKEN_LIFE_TIME, ip);
+    public String generateTempEmailToken(String email){
+        return otherTokenFactory(email, EMAIL_TOKEN_LIFE_TIME);
     }
 
     public String accessTokenFactory(AccountEntity account) {
@@ -88,7 +88,7 @@ public class TokenService implements InitializingBean {
                 .compact();
     }
 
-    public String otherTokenFactory(String email, String liveTime, String ip) {
+    public String otherTokenFactory(String email, String liveTime) {
         String tokenId = UUID.randomUUID().toString();
         // build token
         return Jwts.builder()
@@ -100,7 +100,6 @@ public class TokenService implements InitializingBean {
                 .expiration(new Date(System.currentTimeMillis() + TimeConverter.convertToMilliseconds(liveTime)))
                 .id(tokenId)
                 .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
-                .claim("IP", ip)
                 .compact();
     }
 

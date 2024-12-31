@@ -8,7 +8,9 @@ import com.example.identityService.application.DTO.request.CreateAccountRequest;
 import com.example.identityService.application.DTO.request.UserPageRequest;
 import com.devdeli.common.dto.response.PageResponse;
 import com.example.identityService.application.DTO.response.UserResponse;
+import com.example.identityService.application.mapper.UserQueryMapper;
 import com.example.identityService.application.util.ExcelHelper;
+import com.example.identityService.domain.query.GetUserPageQuery;
 import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
@@ -47,6 +49,7 @@ public class AccountService {
     private final AccountRoleService accountRoleService;
     private final PasswordEncoder passwordEncoder;
     private final FileService remoteFileService;
+    private final UserQueryMapper userQueryMapper;
 
     public UserResponse getUserinfo(UUID accountId){
         AccountEntity foundAccount = accountRepository.findById(accountId)
@@ -90,6 +93,11 @@ public class AccountService {
                 .totalPages(request.getPage() % request.getSize())
                 .response(userResponseList)
                 .build();
+    }
+
+    public PageResponse<UserResponse> getUsers(GetUserPageQuery request) {
+        UserPageRequest rq = userQueryMapper.toUserPageQuery(request);
+        return getUsers(rq);
     }
 
     public byte[] exportUsers(UserPageRequest request) throws IOException {

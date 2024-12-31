@@ -15,5 +15,4 @@ public class LoginRequest {
     private String email;
     @NotBlank(message = "EMAIL_PASSWORD_NOT_BLANK")
     private String password;
-    private String ip;
 }

@@ -10,8 +10,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class CreateUserCommand {
-    private String email;
+public class UpdateUserCommand {
     private String password;
     private String fullname = "";
     private LocalDate dob;
