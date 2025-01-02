@@ -1,12 +1,12 @@
 com.devdeli.common.config.JwtProperties
 com.devdeli.common.config.ActionLogFilter
-com.devdeli.common.config.CustomLogFilter
 com.devdeli.common.config.PasswordEncoderConfig
 com.devdeli.common.config.RedisConfig
 com.devdeli.common.config.PermissionEvaluatorConfig
 com.devdeli.common.config.AuditorAwareImpl
 com.devdeli.common.service.RedisService
 com.devdeli.common.security.ForbiddenTokenFilter
+com.devdeli.common.security.CorsConfig
 com.devdeli.common.security.JwtAuthenticationEntryPoint
 com.devdeli.common.security.impl.RemoteTokenCacheServiceImpl
 com.devdeli.common.security.CustomAuthenticationFilter

@@ -1,0 +1,100 @@
+# Cấu hình server
+server:
+  port: 9999 # Port của API Gateway
+
+# Cấu hình Spring
+spring:
+  application:
+    name: gateway # Tên service khi đăng ký với Eureka
+  cloud:
+    gateway:
+      routes:
+        # Route cho fallback endpoint - Điểm đến khi service gặp sự cố
+        - id: fallback
+          uri: forward:/fallback # Chuyển tiếp đến endpoint local
+          predicates:
+            - Path=/fallback
+
+        # Route cho IAM service
+        - id: iam
+          uri: lb://iam # lb:// cho phép load balancing qua Eureka
+          predicates:
+            - Path=/iam/** # Match tất cả request bắt đầu với /iam
+          filters:
+            - StripPrefix=1 # Bỏ prefix "iam" trước khi forward request
+            - name: RequestLogging
+            - name: CircuitBreaker
+              args:
+                name: iamCircuitBreaker
+                fallbackUri: forward:/fallback # URI xử lý khi có lỗi
+                statusCodes: # Các HTTP status code được coi là lỗi
+                  - 500 # Internal Server Error - Lỗi server
+                  - 503 # Service Unavailable - Service không khả dụng
+                  - 504 # Gateway Timeout - Timeout từ service
+
+        # Route định tuyến cho Storage Service
+        - id: storage
+          uri: lb://storage # Load balanced URL cho storage service
+          predicates:
+            - Path=/storage/** # Pattern URL cho storage service
+          filters:
+            - StripPrefix=1 # Bỏ prefix "storage"
+            - name: RequestLogging # Ghi log request
+      discovery:
+        locator:
+          enabled: true # Kích hoạt service discovery với Eureka
+  main:
+    web-application-type: reactive # Sử dụng WebFlux cho non-blocking I/O
+
+# Cấu hình Swagger UI - Documentation API
+springdoc:
+  api-docs:
+    enabled: true # Kích hoạt API documentation
+  swagger-ui:
+    enabled: true # Kích hoạt Swagger UI
+    path: /swagger-ui.html # Đường dẫn đến Swagger UI
+    config-url: /v3/api-docs/swagger-config
+    urls: # Cấu hình các API docs của các service
+      - name: IAM Service
+        url: /iam/api/v1.0.0/v3/api-docs
+      - name: Storage Service
+        url: /storage/api/v1.0.0/v3/api-docs
+
+# Cấu hình Eureka Client - Service Discovery
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/ # URL của Eureka Server
+  instance:
+    preferIpAddress: true # Sử dụng IP thay vì hostname khi Đăng ký
+
+# Cấu hình Circuit Breaker - Xử lý lỗi và tăng tính sẵn sàng
+resilience4j:
+  # Cấu hình Circuit Breaker - Pattern để xử lý lỗi hệ thống
+  circuitbreaker:
+    instances:
+      iamCircuitBreaker:
+        # Cấu hình ngưỡng và cửa sổ đánh giá
+        failureRateThreshold: 50 # Ngưỡng 50% request lỗi sẽ mở circuit
+        slidingWindowSize: 6 # Số lượng request được theo dõi để đánh giá
+        minimumNumberOfCalls: 5 # Số lượng request tối thiểu trước khi đánh giá
+
+        # Cấu hình thời gian và trạng thái
+        waitDurationInOpenState: 5s             # Thời gian ở trạng thái OPEN trước khi thử lại
+        permittedNumberOfCallsInHalfOpenState: 2 # Số request thử nghiệm ở trạng thái HALF-OPEN
+
+        # Cấu hình xử lý lỗi
+        automaticTransitionFromOpenToHalfOpenEnabled: true # Tự động chuyển từ OPEN sang HALF-OPEN
+
+  # Cấu hình timeout
+  timelimiter:
+    instances:
+      iamCircuitBreaker:
+        timeoutDuration: 2s # Request timeout sau 2 giây
+        cancelRunningFuture: true # Hủy request đang chạy khi timeout
+
+  # Cấu hình retry - Tắt để tránh xung đột với circuit breaker
+  retry:
+    instances:
+      iamCircuitBreaker:
+        maxAttempts: 1 # Không retry (1 = không thử lại)

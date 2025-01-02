@@ -1,17 +1,13 @@
 package com.devdeli.common.security;
 
 import com.devdeli.common.config.ActionLogFilter;
-import com.devdeli.common.config.CustomLogFilter;
 import com.devdeli.common.config.JwtProperties;
-import com.devdeli.common.config.RegexPermissionEvaluator;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManagerResolver;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,12 +25,10 @@ import org.springframework.security.web.SecurityFilterChain;
 )
 @Configuration
 @RequiredArgsConstructor
-
 public class HttpSecurityConfiguration {
 
     private final ActionLogFilter actionLogFilter;
     private final CustomAuthenticationFilter customAuthenticationFilter;
-    private final CustomLogFilter customLogFilter;
     private final ForbiddenTokenFilter forbiddenTokenFilter;
     private final JwtProperties jwtProperties;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -63,7 +57,6 @@ public class HttpSecurityConfiguration {
         http.addFilterAfter(this.forbiddenTokenFilter, BearerTokenAuthenticationFilter.class);
         http.addFilterAfter(this.customAuthenticationFilter, BearerTokenAuthenticationFilter.class);
         http.addFilterAfter(this.actionLogFilter, BearerTokenAuthenticationFilter.class);
-        http.addFilterAfter(this.customLogFilter, BearerTokenAuthenticationFilter.class);
         // @formatter:on
         return http.build();
     }

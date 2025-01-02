@@ -1,16 +1,47 @@
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uris:
-            sso: ${JWK_SSO_URL:http://localhost:8081/auth/realms/IAM2/protocol/openid-connect/certs}
-            internal: ${JWK_INTERNAL_URL:http://localhost:2818/api/v1.0.0/certificate/.well-known/jwks.json}
-
 app:
+  version: ${APP_VERSION:1.0.0}
+server:
+  servlet:
+    context-path: /api/v${app.version}/
+  port: 2819
+
+spring:
+  application:
+    name: storage
+  config:
+    import: configserver:http://localhost:8888
+  output:
+    ansi:
+      enabled: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+
+openapi:
+  service:
+    package: com.example.storageservice.presentation.rest
+    title: Storage Service API document
+    description: This is an official API document of Storage Service
+    version: ${app.version}
+    server: http://localhost:${server.port}/api/v${app.version}
+    group: service
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
+
+logging:
+  file:
+    path: logs/iam/
+    name: logs/iam/application.log
+springdoc:
+  swagger-ui:
+    path: api-docs
+
+file:
   storage:
-    internal-url: http://localhost:2819
-  iam:
-    internal-url: http://localhost:2818
-    client-id: storage-client
-    client-secret: yIuUC9uYOfDIuq1bhkSU5Y3MM7gxSSkx
+    location: ./uploads
