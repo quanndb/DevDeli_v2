@@ -1,20 +1,17 @@
 package com.example.identityService.application.service;
 
 import com.devdeli.common.service.RedisService;
-import com.example.identityService.application.util.TimeConverter;
-import com.example.identityService.application.config.AuthenticationProperties;
-import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.example.identityService.application.DTO.Token;
-
+import com.example.identityService.application.config.AuthenticationProperties;
+import com.example.identityService.application.util.TimeConverter;
+import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTParser;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +27,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -121,14 +119,9 @@ public class TokenService implements InitializingBean {
         return !isTokenExpired(token) && !isLogout(token);
     }
 
-    public Claims extractClaims(String token){
-        try{
-            return Jwts.parser().verifyWith(keyPair.getPublic())
-                    .build().parseSignedClaims(token).getPayload();
-        }
-        catch (ExpiredJwtException | SignatureException exception){
-            return null;
-        }
+    public Optional<Claims> extractClaims(String token){
+        return Optional.ofNullable(Jwts.parser().verifyWith(keyPair.getPublic())
+                .build().parseSignedClaims(token).getPayload());
     }
 
     public boolean isTokenExpired(String token){
@@ -138,7 +131,6 @@ public class TokenService implements InitializingBean {
         } catch (ParseException e) {
             return false;
         }
-
     }
 
     public boolean isLogout(String token){

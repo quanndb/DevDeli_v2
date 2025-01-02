@@ -4,24 +4,19 @@ import com.devdeli.common.dto.request.ClientTokenRequest;
 import com.devdeli.common.dto.response.ClientTokenResponse;
 import com.devdeli.common.service.RedisService;
 import com.example.identityService.application.DTO.EmailEnum;
-import com.example.identityService.application.DTO.request.ChangePasswordRequest;
-import com.example.identityService.application.DTO.request.CreateAccountRequest;
 import com.example.identityService.application.DTO.request.EmailRequest;
 import com.example.identityService.application.DTO.request.LoginRequest;
-import com.example.identityService.application.DTO.request.RegisterRequest;
-import com.example.identityService.application.DTO.request.ResetPasswordRequest;
 import com.example.identityService.application.DTO.response.GoogleUserResponse;
 import com.example.identityService.application.DTO.response.LoginResponse;
+import com.example.identityService.application.exception.AppExceptions;
+import com.example.identityService.application.exception.ErrorCode;
+import com.example.identityService.application.service.EmailService;
+import com.example.identityService.application.service.TokenService;
 import com.example.identityService.application.util.RandomCodeCreator;
 import com.example.identityService.application.util.TimeConverter;
 import com.example.identityService.domain.User;
-import com.example.identityService.domain.query.LoginQuery;
 import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
-import com.example.identityService.application.exception.AppExceptions;
-import com.example.identityService.application.exception.ErrorCode;
 import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
-import com.example.identityService.application.service.EmailService;
-import com.example.identityService.application.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -61,11 +56,8 @@ public abstract class AbstractAuthService{
     public abstract LoginResponse performLoginWithGoogle(String email, String password);
     public abstract boolean logout(String accessToken, String refreshToken) throws ParseException;
     public abstract Object getNewToken(String refreshToken);
-    public abstract boolean performResetPassword(String token, String newPassword) throws ParseException;
-    public abstract boolean performChangePassword(ChangePasswordRequest request);
-    public abstract boolean performRegister(RegisterRequest request);
-    public abstract boolean performCreateUser(CreateAccountRequest request);
     public abstract boolean performCreateOrUpdateUser(User request);
+    public abstract boolean performCreateOrUpdateUsers(List<User> request);
     public abstract boolean performRegisterUserFromGoogle(AccountEntity request);
 
     public AbstractAuthService() {
@@ -97,9 +89,6 @@ public abstract class AbstractAuthService{
         return null;
     }
 
-    public LoginResponse login(LoginQuery query){
-        return login(new LoginRequest(query.getEmail(), query.getPassword()));
-    }
     // google
     public LoginResponse loginWithGoogle(String code) {
         var token = googleAuthService.exchangeToken(code);
@@ -115,19 +104,6 @@ public abstract class AbstractAuthService{
     }
 
     // Function
-    public static boolean register(RegisterRequest request) {
-        for (AbstractAuthService child : children) {
-            child.performRegister(request);
-        }
-        return true;
-    }
-
-    public static boolean createUser(CreateAccountRequest request) {
-        for (AbstractAuthService child : children) {
-            child.performCreateUser(request);
-        }
-        return true;
-    }
 
     public static boolean createOrUpdateUser(User request) {
         for (AbstractAuthService child : children) {
@@ -136,16 +112,9 @@ public abstract class AbstractAuthService{
         return true;
     }
 
-    public static boolean changePassword(ChangePasswordRequest request){
+    public static boolean createOrUpdateUsers(List<User> request) {
         for (AbstractAuthService child : children) {
-            child.performChangePassword(request);
-        }
-        return true;
-    }
-
-    public static boolean resetPassword(ResetPasswordRequest request) throws ParseException {
-        for (AbstractAuthService child : children) {
-            child.performResetPassword(request.getToken(), request.getNewPassword());
+            child.performCreateOrUpdateUsers(request);
         }
         return true;
     }

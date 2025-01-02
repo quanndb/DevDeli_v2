@@ -2,8 +2,6 @@ package com.example.identityService.application.service.auth;
 
 import com.devdeli.common.dto.request.ClientTokenRequest;
 import com.devdeli.common.dto.response.ClientTokenResponse;
-import com.example.identityService.application.DTO.request.ChangePasswordRequest;
-import com.example.identityService.application.DTO.request.CreateAccountRequest;
 import com.example.identityService.application.DTO.request.LoginRequest;
 import com.example.identityService.application.DTO.request.RegisterRequest;
 import com.example.identityService.application.DTO.response.LoginResponse;
@@ -14,14 +12,12 @@ import com.example.identityService.application.service.TokenService;
 import com.example.identityService.domain.User;
 import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.example.identityService.infrastructure.persistence.mapper.AccountMapper;
-import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -42,7 +38,6 @@ public class KeycloakService extends AbstractAuthService {
     private final KeycloakProvider keycloakProvider;
     private final AccountMapper accountMapper;
     private final TokenService tokenService;
-    private final AccountRepository accountRepository;
 
     @Override
     public LoginResponse performLogin(LoginRequest request) {
@@ -57,7 +52,7 @@ public class KeycloakService extends AbstractAuthService {
                 request.getClientId(), request.getClientSecret(), "client_credentials");
 
         return WebClient.create(KEYCLOAK_AUTH_URL).post()
-                .uri("/realms/IAM2/protocol/openid-connect/token")
+                .uri("/realms/DevDeli/protocol/openid-connect/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .bodyValue(body).retrieve().bodyToMono(ClientTokenResponse.class).block();
     }
@@ -67,7 +62,6 @@ public class KeycloakService extends AbstractAuthService {
         return performLogin(new LoginRequest(email, password));
     }
 
-    @Override
     public boolean performRegister(RegisterRequest request) {
         UserRepresentation user = new UserRepresentation();
         user.setUsername(request.getEmail());
@@ -89,28 +83,37 @@ public class KeycloakService extends AbstractAuthService {
     }
 
     @Override
-    public boolean performCreateUser(CreateAccountRequest request) {
-        return performRegister(accountMapper.toRegisterRequest(request));
+    public boolean performCreateOrUpdateUser(User request) {
+        UsersResource usersResource = keycloakProvider.getRealmResourceWithAdminPrivilege().users();
+        List<UserRepresentation> users = usersResource.search(request.getEmail(), true);
+        if (!users.isEmpty()) {
+            UserRepresentation user = users.getFirst();
+
+            CredentialRepresentation credentials = new CredentialRepresentation();
+            credentials.setTemporary(false);
+            credentials.setType(CredentialRepresentation.PASSWORD);
+            credentials.setValue(request.getPassword());
+
+            usersResource.get(user.getId()).resetPassword(credentials);
+            return true;
+        } else {
+            return performRegister(accountMapper.toRegisterRequest(request));
+        }
     }
 
     @Override
-    public boolean performCreateOrUpdateUser(User request) {
-        try{
-            return performRegister(accountMapper.toRegisterRequest(request));
-        }
-        catch (Exception _){
-            return true;
-        }
+    public boolean performCreateOrUpdateUsers(List<User> request) {
+        for(User item : request) performRegister(accountMapper.toRegisterRequest(item));
+        return true;
     }
 
     @Override
     public boolean performRegisterUserFromGoogle(AccountEntity request) {
-        performRegister(RegisterRequest.builder()
+        return performRegister(RegisterRequest.builder()
                 .email(request.getEmail())
                 .password(request.getPassword())
                 .fullname(request.getFullname())
                 .build());
-        return true;
     }
 
     @Override
@@ -119,18 +122,11 @@ public class KeycloakService extends AbstractAuthService {
                 CLIENT_ID, CLIENT_SECRET, refreshToken);
 
         WebClient.create(KEYCLOAK_AUTH_URL).post()
-                .uri("/realms/IAM2/protocol/openid-connect/logout")
+                .uri("/realms/DevDeli/protocol/openid-connect/logout")
                 .header("Content-Type", "application/x-www-form-urlencoded",
                         "Authorization", "Bear " + accessToken)
                 .bodyValue(body).retrieve().bodyToMono(Object.class).block();
         return true;
-    }
-
-    @Override
-    public boolean performResetPassword(String token, String newPassword) {
-        String email = tokenService.getTokenDecoded(token).getSubject();
-
-        return changePassword(email, newPassword);
     }
 
     @Override
@@ -141,15 +137,9 @@ public class KeycloakService extends AbstractAuthService {
                 CLIENT_ID, CLIENT_SECRET, refreshToken);
 
         return WebClient.create(KEYCLOAK_AUTH_URL).post()
-                .uri("/realms/IAM2/protocol/openid-connect/token")
+                .uri("/realms/DevDeli/protocol/openid-connect/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .bodyValue(body).retrieve().bodyToMono(Object.class).block();
-    }
-
-    @Override
-    public boolean performChangePassword(ChangePasswordRequest request) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return changePassword(email, request.getNewPassword());
     }
 
     public boolean changePassword(String email, String newPassword) {

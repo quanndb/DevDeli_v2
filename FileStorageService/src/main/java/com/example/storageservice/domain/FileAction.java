@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Entity
 @Getter
 @Setter
@@ -22,10 +24,9 @@ import lombok.Setter;
 @RequiredArgsConstructor
 public class FileAction extends Auditable {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
     @Column(nullable = false)
-    private String fileId;
+    private UUID fileId;
     @Column(nullable = false)
     private String action;
     private String note;

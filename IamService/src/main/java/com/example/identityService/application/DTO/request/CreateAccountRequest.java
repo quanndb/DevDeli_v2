@@ -7,12 +7,14 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 @Getter
+@RequiredArgsConstructor
 @Builder
 public class CreateAccountRequest {
     @Email(message = "INVALID_EMAIL")

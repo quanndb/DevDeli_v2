@@ -69,13 +69,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                         .collect(Collectors.toSet());
             }
 
-            String username;
-            if (StringUtils.hasText(token.getClaimAsString("preferred_username"))) {
-                username = token.getClaimAsString("preferred_username");
-            } else {
-                username = token.getClaimAsString("sub");
-            }
-
+            String username = token.getClaimAsString("email");
             User principal = new User(username, "", grantedPermissions);
             AbstractAuthenticationToken auth =
                     new UserAuthentication(principal, token, grantedPermissions, isRoot, !isRoot);

@@ -6,31 +6,41 @@ import com.example.identityService.application.DTO.request.UserPageRequest;
 import com.example.identityService.application.DTO.response.LoginResponse;
 import com.example.identityService.application.DTO.response.UserResponse;
 import com.example.identityService.application.config.idp_config.AuthServiceFactory;
-import com.example.identityService.application.mapper.UserQueryMapper;
+import com.example.identityService.application.exception.AppExceptions;
+import com.example.identityService.application.exception.ErrorCode;
+import com.example.identityService.application.mapper.CustomUserQueryMapper;
 import com.example.identityService.application.service.AccountService;
 import com.example.identityService.application.service.UserQueryService;
-import com.example.identityService.domain.query.GetUserPageQuery;
-import com.example.identityService.domain.query.LoginQuery;
+import com.example.identityService.domain.User;
+import com.example.identityService.domain.repository.UserDomainRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UserQueryServiceImpl implements UserQueryService {
 
-    private final AuthServiceFactory authServiceFactory;
     private final AccountService accountService;
-    private final UserQueryMapper userQueryMapper;
+    private final AuthServiceFactory authServiceFactory;
+    private final UserDomainRepository userDomainRepository;
+    private final CustomUserQueryMapper customUserQueryMapper;
 
     @Override
     public LoginResponse login(LoginRequest request) {
-        LoginQuery query = userQueryMapper.toLoginQuery(request);
-        return authServiceFactory.getAuthService().login(query);
+        return authServiceFactory.getAuthService().login(request);
     }
 
     @Override
     public PageResponse<UserResponse> getUsers(UserPageRequest pageRequest) {
-        GetUserPageQuery query = userQueryMapper.toUserPageQuery(pageRequest);
-        return accountService.getUsers(query);
+        return accountService.getUsers(pageRequest);
+    }
+
+    @Override
+    public UserResponse getUserInfo(UUID userId) {
+        User foundDomain = userDomainRepository.findById(userId)
+                .orElseThrow(()->new AppExceptions(ErrorCode.ACCOUNT_NOTFOUND));
+        return customUserQueryMapper.from(foundDomain);
     }
 }

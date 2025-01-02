@@ -52,8 +52,6 @@ public class DefaultAuthService extends AbstractAuthService {
     private String ACCESS_TOKEN_LIFE_TIME;
     @Value(value = "${security.authentication.jwt.refresh-token-life-time}")
     private String REFRESH_TOKEN_LIFE_TIME;
-    @Value(value = "${security.authentication.jwt.email-token-life-time}")
-    private String EMAIL_TOKEN_LIFE_TIME;
 
     private final AccountRepository accountRepository;
     private final TokenService tokenService;
@@ -107,39 +105,6 @@ public class DefaultAuthService extends AbstractAuthService {
     // -----------------------------Login logout end-------------------------------
 
     // -----------------------------Registration flow start-------------------------------
-
-    @Override
-    public boolean performRegister(RegisterRequest request) {
-        accountRepository
-                .findByEmail(request.getEmail())
-                .ifPresent(_ -> {
-                    throw new AppExceptions(ErrorCode.USER_EXISTED);
-                });
-        AccountEntity newAccount = accountMapper.toAccount(request);
-        newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
-        newAccount.setEnable(true);
-
-        createAppUserAndAssignRole(newAccount);
-
-        sendVerifyEmail(newAccount.getEmail());
-        return true;
-    }
-
-    @Override
-    public boolean performCreateUser(CreateAccountRequest request) {
-        accountRepository
-                .findByEmail(request.getEmail())
-                .ifPresent(_ -> {
-                    throw new AppExceptions(ErrorCode.USER_EXISTED);
-                });
-        AccountEntity newAccount = accountMapper.toAccount(request);
-        newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        AccountEntity savedAccount = accountRepository.save(newAccount);
-        return accountRoleService
-                .assignRolesForUser(savedAccount.getId(), request.getRoleIds());
-    }
-
     @Override
     public boolean performCreateOrUpdateUser(User request) {
         AccountEntity user = accountMapper.toAccount(request);
@@ -152,14 +117,26 @@ public class DefaultAuthService extends AbstractAuthService {
     }
 
     @Override
+    public boolean performCreateOrUpdateUsers(List<User> request) {
+        List<AccountEntity> users = accountMapper.toAccount(request);
+        List<AccountEntity> existedUsers = accountRepository.getByIdIn(users.stream().map(AccountEntity::getId).toList());
+        for(int i = 0; i < existedUsers.size(); i++) {
+            if (!passwordEncoder.matches(request.get(i).getPassword(), existedUsers.get(i).getPassword()))
+                existedUsers.get(i).setPassword(passwordEncoder.encode(request.get(i).getPassword()));
+        }
+        accountRepository.saveAll(users);
+        return true;
+    }
+
+    @Override
     public boolean performRegisterUserFromGoogle(AccountEntity request) {
         createAppUserAndAssignRole(request);
         return true;
     }
 
     public Object verifyEmailAndIP(String token){
-        Claims claims = tokenService.extractClaims(token);
-        if(claims == null) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+        Claims claims = tokenService.extractClaims(token)
+                .orElseThrow(()-> new AppExceptions(ErrorCode.UNAUTHENTICATED));
         String email = claims.getSubject();
         if(!tokenService.verifyToken(token))
             throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
@@ -210,49 +187,9 @@ public class DefaultAuthService extends AbstractAuthService {
     }
 
     // password
-    @Override
-    public boolean performChangePassword(ChangePasswordRequest request) {
-        String currentPassword = request.getCurrentPassword();
-        String newPassword = request.getNewPassword();
-        if(currentPassword.equals(newPassword)) throw new AppExceptions(ErrorCode.PASSWORD_MUST_DIFFERENCE);
-
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        AccountEntity foundUser = accountRepository.findByEmail(email)
-                .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
-        boolean isCorrectPassword = passwordEncoder.matches(request.getCurrentPassword(), foundUser.getPassword());
-        if(!isCorrectPassword) throw new AppExceptions(ErrorCode.WRONG_PASSWORD);
-
-        foundUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        accountRepository.save(foundUser);
-        return true;
-    }
-
     public boolean forgotPassword(String email) {
         getAccountByEmail(email);
         sendForgotPasswordEmail(email);
-        return true;
-    }
-
-    @Override
-    public boolean performResetPassword(String token, String newPassword) throws ParseException {
-        String email = tokenService.getTokenDecoded(token).getSubject();
-
-        String key = String.join("","forgot-password-attempt:", email);
-        String attempValueString = redisService.getValue(key);
-
-        String activeToken = attempValueString != null ? attempValueString.split("@")[1] : null;
-        if(!tokenService.verifyToken(token) || email == null || !Objects.equals(activeToken, token))
-            throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
-
-        tokenService.deActiveToken(new Token(token, TimeConverter.convertToMilliseconds(EMAIL_TOKEN_LIFE_TIME)));
-
-        AccountEntity foundAccount = accountRepository.findByEmail(email)
-                .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
-        foundAccount.setPassword(passwordEncoder.encode(newPassword));
-        accountRepository.save(foundAccount);
-
-        sendResetPasswordSuccess(email);
         return true;
     }
 

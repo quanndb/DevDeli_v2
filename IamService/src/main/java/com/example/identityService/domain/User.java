@@ -33,7 +33,7 @@ public class User extends AuditableDomain {
     private String cloudImageId;
     private String cloudImageUrl;
 
-    private List<UserRole> roles;
+    private List<UserRole> roles = new ArrayList<>();
 
 //    @TODO domain constructor
     public User(CreateUserCommand cmd){
@@ -110,6 +110,9 @@ public class User extends AuditableDomain {
         if ( cmd.getVerified() != null ) {
             this.verified = cmd.getVerified();
         }
+        if ( cmd.getDeleted() != null ) {
+            this.deleted = cmd.getDeleted();
+        }
         if ( cmd.getEnable() != null ) {
             this.enable = cmd.getEnable();
         }
@@ -130,7 +133,19 @@ public class User extends AuditableDomain {
         }
     }
 
-    public void assignRoles(List<UserRole> existingUserRoles, List<UUID> newRoleIds) {
+    public void deleteUser(){
+        this.deleted = true;
+    }
+
+    public void updateUserEnable(boolean enable){
+        this.enable = enable;
+    }
+
+    public void upDatePassword(String newPassword){
+        this.password = newPassword;
+    }
+
+    private void assignRoles(List<UserRole> existingUserRoles, List<UUID> newRoleIds) {
         // Get the existing role IDs from the provided list of UserRoles
         List<UUID> existingRoleIds = existingUserRoles.stream()
                 .map(UserRole::getRoleId)
@@ -163,19 +178,11 @@ public class User extends AuditableDomain {
         this.roles = result;
     }
 
-    public void deleteUser(){
-        this.deleted = true;
-    }
-
-    public void upDatePassword(String newPassword){
-        this.password = newPassword;
-    }
-
 
 /*    @TODO
         - save user (info, roles) --> Saved ok but not sync to keycloak, password encoder yet
         - update user (info, roles) --> Saved ok, soft delete and undelete
-        - delete user (soft delete)
+        - delete user (soft delete) --> delete ok
 */
 }
 

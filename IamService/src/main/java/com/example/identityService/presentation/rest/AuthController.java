@@ -1,33 +1,28 @@
 package com.example.identityService.presentation.rest;
 
 import com.devdeli.common.dto.request.ClientTokenRequest;
+import com.devdeli.common.dto.request.LogoutRequest;
 import com.devdeli.common.dto.response.ClientTokenResponse;
 import com.devdeli.common.support.SecurityUtils;
 import com.example.identityService.application.DTO.ApiResponse;
 import com.example.identityService.application.DTO.request.ChangePasswordRequest;
 import com.example.identityService.application.DTO.request.ForgotPasswordRequest;
 import com.example.identityService.application.DTO.request.LoginRequest;
-import com.devdeli.common.dto.request.LogoutRequest;
 import com.example.identityService.application.DTO.request.RefreshTokenRequest;
 import com.example.identityService.application.DTO.request.RegisterRequest;
 import com.example.identityService.application.DTO.request.ResetPasswordRequest;
 import com.example.identityService.application.DTO.request.UpdateProfileRequest;
 import com.example.identityService.application.DTO.response.LoginResponse;
+import com.example.identityService.application.DTO.response.UserResponse;
+import com.example.identityService.application.config.idp_config.AuthServiceFactory;
 import com.example.identityService.application.exception.AppExceptions;
 import com.example.identityService.application.exception.ErrorCode;
 import com.example.identityService.application.service.UserCommandService;
 import com.example.identityService.application.service.UserQueryService;
-import com.example.identityService.application.util.IpChecker;
-import com.example.identityService.application.util.JsonMapper;
-import com.example.identityService.application.util.ObjectValidator;
-import com.example.identityService.application.config.idp_config.AuthServiceFactory;
-import com.example.identityService.application.service.auth.AbstractAuthService;
 import com.example.identityService.application.service.auth.DefaultAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.security.SecurityUtil;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,9 +31,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.text.ParseException;
 
 @RestController
@@ -46,12 +39,10 @@ import java.text.ParseException;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final AuthServiceFactory authServiceFactory;
     private final DefaultAuthService authService;
-    private final ObjectValidator objectValidator;
-    private final JsonMapper jsonMapper;
     private final UserQueryService userQueryService;
     private final UserCommandService userCommandService;
+    private final AuthServiceFactory authServiceFactory;
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest dto) {
@@ -102,7 +93,7 @@ public class AuthController {
     }
 
     @GetMapping("/refresh-token")
-    public ApiResponse<?> getNewAccessToken(@RequestBody @Valid RefreshTokenRequest requestBody) {
+    public ApiResponse<Object> getNewAccessToken(@RequestBody @Valid RefreshTokenRequest requestBody) {
         String refreshToken = requestBody.getRefreshToken();
         return ApiResponse.builder()
                 .code(200)
@@ -111,8 +102,8 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<?> getProfile() {
-        return ApiResponse.builder()
+    public ApiResponse<UserResponse> getProfile() {
+        return ApiResponse.<UserResponse> builder()
                 .code(200)
                 .result(authService.getProfile())
                 .build();
@@ -127,7 +118,7 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ApiResponse<Boolean> fogotPasswordAttemp(@RequestBody @Valid ForgotPasswordRequest dto) {
+    public ApiResponse<Boolean> fogotPasswordAttempt(@RequestBody @Valid ForgotPasswordRequest dto) {
         boolean result = authService.forgotPassword(dto.getEmail());
         return ApiResponse.<Boolean>builder()
                 .code(200)
@@ -136,8 +127,9 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ApiResponse<Boolean> resetPassword(@RequestBody @Valid ResetPasswordRequest passwordRequestDTO) throws ParseException {
-        boolean result = AbstractAuthService.resetPassword(passwordRequestDTO);
+    public ApiResponse<Boolean> resetPassword(@RequestBody @Valid ResetPasswordRequest passwordRequestDTO) {
+        boolean result = userCommandService.resetPassword(SecurityUtils.getCurrentUser()
+                .orElseThrow(()-> new AppExceptions(ErrorCode.UNAUTHENTICATED)),passwordRequestDTO.getNewPassword());
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
@@ -145,7 +137,7 @@ public class AuthController {
     }
 
     @PatchMapping("/me")
-    public ApiResponse<Boolean> updateProfile(@RequestBody @Valid UpdateProfileRequest request) throws IOException {
+    public ApiResponse<Boolean> updateProfile(@RequestBody @Valid UpdateProfileRequest request) {
         boolean result = userCommandService
                 .updateUserInfo(SecurityUtils.getCurrentUser().orElseThrow(()->new AppExceptions(ErrorCode.UNAUTHENTICATED)), request);
         return ApiResponse.<Boolean>builder()
@@ -156,24 +148,19 @@ public class AuthController {
 
     @PutMapping("/me/change-password")
     public ApiResponse<Boolean> changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordDTO) {
-        boolean result = AbstractAuthService.changePassword(changePasswordDTO);
+        boolean result = userCommandService.changePassword(SecurityUtils.getCurrentUser().orElseThrow(()->new AppExceptions(ErrorCode.UNAUTHENTICATED)),
+                changePasswordDTO.getCurrentPassword(), changePasswordDTO.getNewPassword());
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
                 .build();
     }
 
-    @GetMapping("/google")
+    @GetMapping("/oauth2-google")
     public ApiResponse<LoginResponse> loginWithGoogle(@RequestParam String code) {
         return ApiResponse.<LoginResponse>builder()
                 .code(200)
                 .result(authServiceFactory.getAuthService().loginWithGoogle(code))
-                .build();
-    }
-
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        return ResponseEntity.internalServerError()
                 .build();
     }
 }

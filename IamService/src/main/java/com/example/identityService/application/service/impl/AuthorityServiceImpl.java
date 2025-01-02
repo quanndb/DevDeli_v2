@@ -3,6 +3,7 @@ package com.example.identityService.application.service.impl;
 import com.devdeli.common.UserAuthority;
 import com.devdeli.common.service.AuthorityService;
 import com.example.identityService.application.service.AccountRoleService;
+import com.example.identityService.application.service.RolePermissionQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
@@ -16,16 +17,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthorityServiceImpl implements AuthorityService {
 
-    private final AccountRoleService accountRoleService;
+    private final RolePermissionQueryService rolePermissionQueryService;
 
     @Override
     public UserAuthority getUserAuthority(UUID userId) {
-        return null;
+        return rolePermissionQueryService.getUserAuthorityByUserId(userId);
     }
 
     @Override
     public UserAuthority getUserAuthority(String email) {
-        return accountRoleService.getAllUserAuthorities(email);
+        return rolePermissionQueryService.getUserAuthorityByUserEmail(email);
     }
 
     @Override

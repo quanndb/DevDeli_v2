@@ -31,11 +31,6 @@ public class KeycloakProvider {
         return realmResource;
     }
 
-    public Keycloak getKeycloakWithAdminPrivilege() {
-        setKeycloak(ADMIN, PASSWORD);
-        return keycloak;
-    }
-
     public void setKeycloak(String username, String password) {
         this.keycloak = Keycloak.getInstance(KEYCLOAK_AUTH_URL, REALM, username, password, CLIENT_ID, CLIENT_SECRET);
         this.realmResource = keycloak.realm(REALM);

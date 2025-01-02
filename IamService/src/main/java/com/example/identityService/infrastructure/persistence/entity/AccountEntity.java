@@ -3,8 +3,6 @@ package com.example.identityService.infrastructure.persistence.entity;
 import com.devdeli.common.Auditable;
 import com.example.identityService.application.DTO.Gender;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;

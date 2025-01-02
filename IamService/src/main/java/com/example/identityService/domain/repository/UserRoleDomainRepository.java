@@ -9,5 +9,6 @@ import java.util.UUID;
 public interface UserRoleDomainRepository extends DomainRepository<UserRole, UUID> {
     boolean existsIds(List<UUID> roleIds);
     List<UserRole> getAllByUserId(UUID userId);
+    List<UserRole> getAllByUserIdAndDeletedIsFalse(UUID userId);
     List<UserRole> getAllByIds(List<UUID> roleIds);
 }

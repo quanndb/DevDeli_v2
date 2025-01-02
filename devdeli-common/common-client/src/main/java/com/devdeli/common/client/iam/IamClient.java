@@ -12,12 +12,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import java.util.UUID;
+
 @FeignClient(
         url = "${app.iam.internal-url}",
         name = "iam",
         contextId = "common-iam",
         fallback = IamClientFallback.class)
 public interface IamClient {
+    @GetMapping("/api/v1.0.0/accounts/{userId}/authorities")
+    ApiResponse<UserAuthority> getUserAuthority(@PathVariable UUID userId);
+
     @GetMapping("/api/v1.0.0/accounts/{email}/authorities")
     ApiResponse<UserAuthority> getUserAuthority(@PathVariable String email);
 

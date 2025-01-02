@@ -22,14 +22,15 @@ public class UserResponse {
     private String email;
     private String fullname;
     private LocalDate dob;
-    private int yoe;
+    private Integer yoe;
     private String address;
     private Gender gender;
     private String cloudImageUrl;
     private String cloudImageId;
     private LocalDateTime createdDate;
     private String createdBy;
-    private boolean verified;
-    private boolean enable;
+    private Boolean verified;
+    private Boolean enable;
+    private Boolean deleted;
     private List<String> roles;
 }

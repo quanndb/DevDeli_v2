@@ -17,6 +17,7 @@ public class UpdateUserCommand {
     private Integer yoe = 0;
     private Boolean verified = false;
     private Boolean enable = true;
+    private Boolean deleted = false;
     private Gender gender = Gender.MALE;
     private String address = "";
     private String cloudImageUrl;

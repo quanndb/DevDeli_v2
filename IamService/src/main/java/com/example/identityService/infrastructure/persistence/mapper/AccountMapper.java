@@ -1,6 +1,5 @@
 package com.example.identityService.infrastructure.persistence.mapper;
 
-import com.example.identityService.application.DTO.request.CreateAccountRequest;
 import com.example.identityService.application.DTO.request.RegisterRequest;
 import com.example.identityService.application.DTO.request.UpdateProfileRequest;
 import com.example.identityService.application.DTO.response.UserResponse;
@@ -15,16 +14,12 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface AccountMapper {
-    AccountEntity toAccount(User request);
-    AccountEntity toAccount(RegisterRequest request);
-    AccountEntity toAccount(CreateAccountRequest request);
     UserResponse toUserResponse(AccountEntity request);
+    AccountEntity toAccount(User request);
+    List<AccountEntity> toAccount(List<User> request);
     List<UserResponse> toListUserResponse(List<AccountEntity> request);
-
-    RegisterRequest toRegisterRequest(CreateAccountRequest request);
     RegisterRequest toRegisterRequest(User request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateAccount(@MappingTarget AccountEntity response, UpdateProfileRequest request);
-
 }

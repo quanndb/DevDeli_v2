@@ -11,6 +11,8 @@ import java.util.UUID;
 @Repository
 public interface RolePermissionRepository extends JpaRepository<RolePermissionEntity, UUID> {
     List<RolePermissionEntity> findAllByRoleIdAndDeletedIsFalse(UUID roleId);
+    List<RolePermissionEntity> findAllByRoleIdIn(List<UUID> roleIds);
+    List<RolePermissionEntity> findAllByRoleIdInAndDeletedIsFalse(List<UUID> roleIds);
 
     @Query(value = "SELECT CASE WHEN COUNT(r) > 0 THEN TRUE ELSE FALSE END " +
             "FROM role_permission r " +

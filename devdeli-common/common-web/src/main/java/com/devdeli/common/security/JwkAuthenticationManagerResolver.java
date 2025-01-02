@@ -1,8 +1,6 @@
 package com.devdeli.common.security;
 
 import com.devdeli.common.config.JwtProperties;
-import com.devdeli.common.enums.ErrorCode;
-import com.devdeli.common.exception.AppExceptions;
 import com.nimbusds.jwt.JWTParser;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.AuthenticationManager;

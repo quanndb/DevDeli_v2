@@ -5,10 +5,12 @@ import com.devdeli.common.dto.response.ApiResponse;
 import com.devdeli.common.dto.response.FileResponse;
 import com.devdeli.common.service.FileService;
 import com.devdeli.common.dto.response.PageResponse;
+import com.devdeli.common.support.SecurityUtils;
+import com.example.identityService.application.exception.AppExceptions;
+import com.example.identityService.application.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -27,9 +29,10 @@ public class FileController {
     private final FileService fileService;
 
 //    public
-    @PostMapping("/public/files/upload")
+    @PostMapping("/public/files")
     public ApiResponse<List<FileResponse>> uploadPublicFiles(@RequestParam("files") List<MultipartFile> files) throws IOException {
-        List<FileResponse> result = fileService.uploadPublicFiles(files, getCurrentOwner());
+        List<FileResponse> result = fileService.uploadPublicFiles(files, SecurityUtils.getCurrentUser()
+                .orElseThrow(()-> new AppExceptions(ErrorCode.UNAUTHENTICATED)));
         return ApiResponse.<List<FileResponse>>builder()
                 .code(200)
                 .result(result)
@@ -64,10 +67,11 @@ public class FileController {
     }
 
 //    private
-    @PostMapping("/files/upload")
+    @PostMapping("/files")
     @PreAuthorize("hasPermission(null, 'files.create')")
     public ApiResponse<List<FileResponse>> uploadPrivateFiles(@RequestParam("files") List<MultipartFile> files) throws IOException {
-        List<FileResponse> result = fileService.uploadPrivateFiles(files, getCurrentOwner());
+        List<FileResponse> result = fileService.uploadPrivateFiles(files, SecurityUtils.getCurrentUser()
+                .orElseThrow(()-> new AppExceptions(ErrorCode.UNAUTHENTICATED)));
         return ApiResponse.<List<FileResponse>>builder()
                 .code(200)
                 .result(result)
@@ -110,9 +114,5 @@ public class FileController {
                 .code(200)
                 .result(fileService.getFiles(request))
                 .build();
-    }
-
-    private String getCurrentOwner(){
-        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

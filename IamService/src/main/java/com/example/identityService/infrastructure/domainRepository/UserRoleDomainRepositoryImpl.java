@@ -7,13 +7,13 @@ import com.example.identityService.infrastructure.persistence.mapper.AccountRole
 import com.example.identityService.infrastructure.persistence.repository.AccountRoleRepository;
 import com.example.identityService.infrastructure.persistence.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class UserRoleDomainRepositoryImpl implements UserRoleDomainRepository {
 
@@ -32,6 +32,12 @@ public class UserRoleDomainRepositoryImpl implements UserRoleDomainRepository {
                 .findAllByAccountId(userId);
         return accountRoleMapper.toUserRoleDomainList(accountRoleEntityList);
     }
+
+    @Override
+    public List<UserRole> getAllByUserIdAndDeletedIsFalse(UUID userId) {
+        List<AccountRoleEntity> accountRoleEntityList = accountRoleRepository
+                .findAllByAccountIdAndDeletedIsFalse(userId);
+        return accountRoleMapper.toUserRoleDomainList(accountRoleEntityList);    }
 
     @Override
     public List<UserRole> getAllByIds(List<UUID> roleIds) {

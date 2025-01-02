@@ -7,11 +7,21 @@ import com.devdeli.common.dto.response.ApiResponse;
 import com.devdeli.common.dto.response.ClientTokenResponse;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class IamClientFallback implements IamClient {
     @Override
-    public ApiResponse<UserAuthority> getUserAuthority(String email) {
+    public ApiResponse<UserAuthority> getUserAuthority(UUID userId) {
         // Fallback logic here
+        return ApiResponse.<UserAuthority>builder()
+                .code(500)
+                .message("Server error")
+                .build();
+    }
+
+    @Override
+    public ApiResponse<UserAuthority> getUserAuthority(String email) {
         return ApiResponse.<UserAuthority>builder()
                 .code(500)
                 .message("Server error")

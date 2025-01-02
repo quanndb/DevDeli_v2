@@ -20,6 +20,7 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 public class FileRepositoryImpl implements CustomFileRepository {
@@ -54,7 +55,7 @@ public class FileRepositoryImpl implements CustomFileRepository {
     public void saveFileImportAction(List<File> files) {
         List<FileAction> saved = files.stream()
                 .map(item -> FileAction.builder()
-                        .fileId(item.getPath())
+                        .fileId(UUID.fromString(item.getPath()))
                         .action("Save file")
                         .build())
                 .toList();
@@ -64,7 +65,7 @@ public class FileRepositoryImpl implements CustomFileRepository {
     @Override
     public void saveFileExportAction(String fileName) {
         fileActionRepository.save(FileAction.builder()
-                        .fileId(fileName)
+                        .fileId(UUID.fromString(fileName))
                         .action("Get file")
                 .build());
     }

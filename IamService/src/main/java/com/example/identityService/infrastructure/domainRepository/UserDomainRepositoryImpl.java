@@ -10,13 +10,14 @@ import com.example.identityService.domain.repository.UserRoleDomainRepository;
 import com.example.identityService.infrastructure.persistence.entity.AccountEntity;
 import com.example.identityService.infrastructure.persistence.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@Repository
 @RequiredArgsConstructor
 public class UserDomainRepositoryImpl implements UserDomainRepository {
 
@@ -25,7 +26,8 @@ public class UserDomainRepositoryImpl implements UserDomainRepository {
 
     @Override
     public Optional<User> findById(UUID uuid) {
-        return Optional.empty();
+        Optional<AccountEntity> foundAccount = accountRepository.findById(uuid);
+        return getFromAccountEntity(foundAccount);
     }
 
     @Override
@@ -48,7 +50,10 @@ public class UserDomainRepositoryImpl implements UserDomainRepository {
 
     @Override
     public boolean saveAll(List<User> domains) {
-        return false;
+        AbstractAuthService.createOrUpdateUsers(domains);
+        List<UserRole> userRoles = new ArrayList<>();
+        domains.forEach(item -> userRoles.addAll(item.getRoles()));
+        return userRoleDomainRepository.saveAll(userRoles);
     }
 
     @Override
@@ -72,13 +77,22 @@ public class UserDomainRepositoryImpl implements UserDomainRepository {
     }
 
     @Override
+    public List<String> existedEmailsFromEmails(List<String> emails) {
+        return accountRepository.existedEmailsInEmails(emails);
+    }
+
+    @Override
     public User getByEmail(String email) {
         AccountEntity accountEntity = accountRepository.getByEmail(email);
         return getFromAccountEntity(accountEntity);
     }
 
+    public Optional<User> getFromAccountEntity(Optional<AccountEntity> accountEntity) {
+        return accountEntity.map(this::getFromAccountEntity);
+    }
+
     public User getFromAccountEntity(AccountEntity accountEntity) {
-        List<UserRole> userRoles = userRoleDomainRepository.getAllByUserId(accountEntity.getId());
+        List<UserRole> userRoles = userRoleDomainRepository.getAllByUserIdAndDeletedIsFalse(accountEntity.getId());
         return new User(accountEntity.getId(),
                 accountEntity.getEmail(),
                 accountEntity.getPassword(),
